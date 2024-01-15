@@ -1,0 +1,708 @@
+-------------------- MODULE LeaderConsensus_Verification --------------------
+EXTENDS Integers, TLAPS, TLC, Sequences, LeaderConsensus_Spec, FiniteSets, SequenceOpTheorems
+
+LEMMA maxIn == \A E \in SUBSET(Waves) : E # {} =>  max(E) \in E 
+      
+LEMMA maxProperty == \A E \in SUBSET(Waves) : \A x \in E: E # {} => x<=max(E)
+
+LEMMA SelfIsPrefix == \A S \in Seq(Waves) : IsPrefix(S, S) = TRUE
+      <1>1 \A S \in Seq(Waves) : S \o <<>> = S /\ <<>> \in Seq(Waves)
+           OBVIOUS
+      <1> QED BY IsPrefixConcat, <1>1
+      
+LEMMA transitiveIsPrefix == ASSUME NEW S \in Seq(Waves), NEW L \in Seq(Waves), NEW M \in Seq(Waves), IsPrefix(S,L), IsPrefix(L,M)
+                            PROVE IsPrefix(S,M)
+      <1>1 \E u,w \in Seq(Waves) : L = S \o u /\ M = L \o w
+           BY IsPrefixProperties
+      <1>2 \A n,m, u \in Seq(Waves) : (n \o m) \o u = n \o (m \o u)
+           OBVIOUS
+      <1>3  \E u,w \in Seq(Waves) : M = S \o (u \o w)
+           BY <1>1
+      <1>4 \A u,w \in Seq(Waves) : u \o w \in Seq(Waves) 
+           OBVIOUS
+      <1>5 \A u,w \in Seq(Waves) : M = S \o (u \o w) /\ u \o w \in Seq(Waves) => IsPrefix(S,M)
+           BY IsPrefixConcat
+      <1> QED BY <1>5,<1>4,<1>3
+
+LEMMA appendIsPrefix == \A S \in Seq(Waves), w \in Waves : IsPrefix(S, Append(S,w))
+      <1>1 \A S \in Seq(Waves), w \in Waves : <<w>> \in Seq(Waves) /\ Append(S,w) = S \o <<w>>
+           OBVIOUS
+      <1> QED BY <1>1, IsPrefixConcat
+     
+     
+LEMMA Typecorrectness == Spec => []TypeOK
+ <1>1 Init => TypeOK
+      BY DEF Init, TypeOK
+ <1>2 ASSUME TypeOK, Next
+      PROVE TypeOK'
+      <2>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           PROVE TypeOK'
+           <3>1 record' \in [Proc -> [Waves -> [exists : BOOLEAN, edges : SUBSET(Waves)]]]
+                BY  <2>1, <1>2 DEF Proc, Waves, TypeOK, update_record
+           <3>2 commitWithRef' \in [Proc -> [Waves -> Seq(Waves)]]
+                <4>1 <<w>> \in Seq(Waves)
+                     BY <2>1 
+                <4>2 E # {} =>max(E) \in Waves
+                     BY maxIn,<2>1
+                <4>3 E # {} => Append(commitWithRef[p][max(E)], w) \in Seq(Waves)
+                     <5>1 E # {} => commitWithRef[p][max(E)] \in Seq(Waves)
+                          BY <2>1, <4>2,<1>2 DEF TypeOK
+                     <5> QED BY <5>1, <2>1 
+                <4> QED BY  <4>1,<4>3, <2>1, <1>2 DEF TypeOK, update_record
+           <3> QED BY <3>1,<3>2, <2>1,<1>2 DEF TypeOK, update_record
+      <2>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           PROVE TypeOK'
+           <3>1 decidedRefWave' \in [Proc -> Waves \cup {0}]
+                BY  <2>2, <1>2 DEF Proc, Waves, TypeOK, update_decidedRefWave
+           <3>2 leaderSeq' \in [Proc -> [current : Seq(Waves), last : Seq(Waves)]]
+                <4>1 commitWithRef[p][w] \in Seq(Waves) /\ leaderSeq[p].current \in Seq(Waves)
+                     BY <2>2, <1>2 DEF TypeOK
+                <4> QED BY  <4>1, <2>2, <1>2 DEF Proc, Waves, TypeOK, update_decidedRefWave
+           <3> QED BY <3>1,<3>2, <2>2,<1>2 DEF TypeOK, update_decidedRefWave
+      <2> QED BY <2>1,<2>2, <1>2 DEF Next
+ <1>3 TypeOK /\ UNCHANGED vars => TypeOK'
+      BY DEF vars, TypeOK
+ <1> QED BY <1>1,<1>2,<1>3, PTL DEF Spec
+
+LEMMA Invariant1correctness == Spec => []Invariant1
+ <1>1 Init => Invariant1
+      BY DEF Init, Invariant1
+ <1>2 TypeOK /\ TypeOK' /\ Invariant1 /\ [Next]_vars => Invariant1'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant1
+           PROVE Invariant1'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant1'
+                <4>1 ASSUME NEW q \in Proc, decidedRefWave'[q] # 0
+                     PROVE record'[q][decidedRefWave'[q]].exists = TRUE
+                     <5>1 decidedRefWave'[q] \in Waves
+                          BY <2>1, <4>1 DEF TypeOK
+                     <5>2 CASE decidedRefWave'[q] = w /\ p = q 
+                          BY <5>2,<3>1,<2>1 DEF TypeOK, update_record
+                     <5>3 CASE decidedRefWave'[q] # w \/ p # q
+                          <6>1 decidedRefWave[q] # 0
+                               BY <3>1,<2>1,<4>1, <5>3 DEF TypeOK, update_record
+                          <6>2 record'[q][decidedRefWave'[q]].exists = record[q][decidedRefWave[q]].exists
+                               BY <5>3,<3>1,<2>1, <5>1, <4>1 DEF TypeOK, update_record
+                          <6> QED BY <6>1,<6>2, <2>1 DEF Invariant1
+                     <5> QED BY <5>3,<5>2
+                <4> QED BY <4>1 DEF Invariant1
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant1'
+                <4>1 ASSUME NEW q \in Proc, decidedRefWave'[q] # 0
+                     PROVE record'[q][decidedRefWave'[q]].exists = TRUE
+                     <5>1 decidedRefWave'[q] \in Waves
+                          BY <2>1, <4>1 DEF TypeOK
+                     <5>2 CASE  p = q 
+                          BY <5>2,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                     <5>3 CASE p # q
+                          <6>1 decidedRefWave[q] # 0
+                               BY <3>2,<2>1,<4>1, <5>3 DEF TypeOK, update_decidedRefWave
+                          <6>2 record'[q][decidedRefWave'[q]].exists = record[q][decidedRefWave[q]].exists
+                               BY <5>3,<3>2,<2>1, <5>1, <4>1 DEF TypeOK, update_decidedRefWave
+                          <6> QED BY <6>1,<6>2, <2>1 DEF Invariant1
+                     <5> QED BY <5>3,<5>2
+                <4> QED BY <4>1 DEF Invariant1
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant1
+           PROVE Invariant1'
+           BY <2>2 DEF vars, Invariant1
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, PTL DEF Spec
+
+
+LEMMA Invariant2correctness == Spec => []Invariant2
+ <1>1 Init => Invariant2
+      BY DEF Init, Invariant2
+ <1>2 TypeOK /\ TypeOK' /\ Invariant1 /\ Invariant1' /\ Invariant2 /\ [Next]_vars => Invariant2'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant2, Invariant1, Invariant1'
+           PROVE Invariant2'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant2'
+                <4>1 ASSUME NEW q \in Proc 
+                     PROVE leaderSeq'[q].current = IF decidedRefWave'[q] = 0 THEN <<>> ELSE commitWithRef'[q][decidedRefWave'[q]]
+                     <5>1 leaderSeq'[q].current = leaderSeq[q].current
+                          BY <4>1, <3>1,<2>1 DEF TypeOK, update_record
+                     <5>2 decidedRefWave'[q] = decidedRefWave[q]
+                          BY <4>1, <3>1,<2>1 DEF TypeOK, update_record
+                     <5>3 decidedRefWave'[q] # 0 => commitWithRef'[q][decidedRefWave'[q]] = commitWithRef[q][decidedRefWave[q]]
+                          <6>1 CASE q = p
+                               <7>1 decidedRefWave[q] # 0 => record[q][decidedRefWave[q]].exists = TRUE
+                                    BY <4>1, <2>1 DEF Invariant1
+                               <7>2 decidedRefWave[q] # 0 => w # decidedRefWave[q]
+                                    BY <7>1,<3>1, <6>1  DEF update_record
+                               <7> QED BY <7>2, <4>1, <3>1, <2>1 DEF TypeOK, update_record
+                          <6>2 CASE q # p
+                               BY <6>2,<5>2,<3>1,<4>1,<2>1 DEF TypeOK, update_record
+                          <6> QED BY <6>1,<6>2
+                     <5> QED BY <5>1,<5>2,<5>3, <2>1 DEF Invariant2
+                <4> QED BY <4>1 DEF Invariant2  
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant2'
+                <4>1 ASSUME NEW q \in Proc 
+                     PROVE leaderSeq'[q].current = IF decidedRefWave'[q] = 0 THEN <<>> ELSE commitWithRef'[q][decidedRefWave'[q]]
+                     <5>1 CASE p = q
+                          <6>1 decidedRefWave'[q] = w
+                               BY <5>1, <3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                          <6>2 leaderSeq'[q].current = commitWithRef'[q][decidedRefWave'[q]]
+                               BY <5>1, <3>2,<2>1, <6>1 DEF TypeOK, update_decidedRefWave
+                          <6> QED BY <6>1, <6>2, <3>1 DEF Waves
+                     <5>2 CASE p # q
+                          <6>1 leaderSeq'[q].current =leaderSeq[q].current
+                               BY <4>1, <5>2, <3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                          <6>2 decidedRefWave'[q] = decidedRefWave[q]
+                               BY <4>1, <5>2, <3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                          <6>3 decidedRefWave'[q] # 0 => commitWithRef'[q][decidedRefWave'[q]] = commitWithRef[q][decidedRefWave[q]]
+                               BY <5>2,<6>2,<3>2,<4>1,<2>1 DEF TypeOK, update_decidedRefWave
+                          <6> QED BY <6>1,<6>2,<6>3, <2>1 DEF Invariant2
+                     <5> QED BY <5>1,<5>2
+                <4> QED BY <4>1 DEF Invariant2  
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant2
+           PROVE Invariant2'
+           BY <2>2 DEF vars, Invariant2
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant1correctness, PTL DEF Spec
+ 
+  
+LEMMA Invariant3correctness == Spec => []Invariant3
+ <1>1 Init => Invariant3
+      BY DEF Init, Invariant3
+ <1>2 TypeOK /\ TypeOK' /\ Invariant3 /\ [Next]_vars => Invariant3'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant3
+           PROVE Invariant3'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant3'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in record'[q][x].edges
+                     PROVE record'[q][y].exists = TRUE
+                     <5>1 y \in Waves
+                          BY <4>1, <2>1 DEF TypeOK
+                     <5>2 CASE q = p /\ x = w
+                          BY <5>2,<3>1,<2>1,<4>1 DEF TypeOK, update_record
+                     <5>3 CASE q # p \/ x # w
+                          <6>1 record'[q][x].edges = record[q][x].edges
+                               BY <5>3,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                          <6>2 record[q][y].exists = record'[q][y].exists
+                               <7>1 w # y \/ q # p
+                                    <8>1 record[q][y].exists = TRUE
+                                         BY <6>1, <4>1,<2>1 DEF Invariant3
+                                    <8> QED BY <8>1, <3>1, <4>1 DEF update_record
+                               <7> QED BY <7>1,<5>1,<4>1,<3>1, <2>1 DEF TypeOK, update_record
+                          <6> QED BY <6>1,<6>2,<4>1,<2>1 DEF Invariant3, TypeOK
+                     <5> QED  BY <5>2,<5>3 
+                <4> QED BY <4>1 DEF Invariant3
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant3'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in record'[q][x].edges
+                     PROVE record'[q][y].exists = TRUE 
+                     <5>1 record'[q][x].edges = record[q][x].edges 
+                          BY <4>1,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                     <5>2 record'[q][y].exists = record[q][y].exists
+                          BY <4>1,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                     <5> QED BY <5>1,<5>2,<4>1, <2>1 DEF Invariant3
+                <4> QED BY <4>1 DEF Invariant3
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant3
+           PROVE Invariant3'
+           BY <2>2 DEF vars, Invariant3
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, PTL DEF Spec      
+
+
+LEMMA Invariant4correctness == Spec => []Invariant4
+ <1>1 Init => Invariant4
+      BY DEF Init, Invariant4, Contains
+ <1>2 TypeOK /\ TypeOK' /\ Invariant4 /\ [Next]_vars => Invariant4'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant4
+           PROVE Invariant4'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant4'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                     PROVE record'[q][x].exists = TRUE
+                     <5>1 CASE p = q
+                          <6>1 CASE x = w
+                               BY <6>1,<5>1,<3>1,<2>1 DEF TypeOK, update_record
+                          <6>2 CASE x # w
+                               <7>1 CASE y # w
+                                    BY <7>1,<6>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant4, update_record
+                               <7>2 CASE y = w
+                                    <8>1 E # {}
+                                         BY <6>2,<4>1,<3>1, <7>2,<5>1,<2>1 DEF TypeOK, update_record, Contains
+                                    <8>2 Contains(x, commitWithRef[q][max(E)])
+                                         BY <6>2,<4>1,<3>1, <7>2,<5>1,<2>1, <8>1 DEF TypeOK, update_record, Contains
+                                    <8>3 record'[q][x].exists = record[q][x].exists
+                                         BY <6>2,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                                    <8> QED BY <8>2,<8>1, <8>3, maxIn, <4>1, <2>1, <3>1 DEF Invariant4
+                               <7> QED BY <7>1,<7>2
+                          <6> QED BY <6>1, <6>2
+                     <5>2 CASE p # q
+                          BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant4, update_record
+                     <5> QED BY <5>1,<5>2 
+                <4> QED BY <4>1 DEF Invariant4
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant4'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                     PROVE record'[q][x].exists = TRUE
+                     BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant4, update_decidedRefWave
+                <4> QED BY <4>1 DEF Invariant4
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant4
+           PROVE Invariant4'
+           BY <2>2 DEF vars, Invariant4
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, PTL DEF Spec
+ 
+ 
+LEMMA Invariant5correctness == Spec => []Invariant5
+ <1>1 Init => Invariant5
+      BY DEF Init, Invariant5, Contains
+ <1>2 TypeOK /\ TypeOK' /\ Invariant5 /\ [Next]_vars /\ Invariant4 /\ Invariant4' => Invariant5'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant5, Invariant4, Invariant4'
+           PROVE Invariant5'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant5'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                     PROVE IsPrefix(commitWithRef'[q][x], commitWithRef'[q][y])
+                     <5>1 CASE p = q
+                          <6>1 CASE x = w
+                               <7>1 CASE y = w
+                                    BY <7>1,<6>1, <4>1, <2>1, SelfIsPrefix DEF TypeOK
+                               <7>2 CASE y # w
+                                    <8>1 record[q][x].exists = TRUE
+                                         <9>1 Contains(x, commitWithRef[q][y])
+                                              <10>1 commitWithRef'[q][y] = commitWithRef[q][y]
+                                                    BY <7>2,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                                              <10> QED BY <4>1,<10>1
+                                         <9> QED BY <9>1,<4>1,<2>1 DEF Invariant4
+                                    <8>2 record[q][x].exists = FALSE
+                                         BY <6>1,<5>1,<3>1 DEF update_record
+                                    <8> QED BY <8>1,<8>2
+                               <7> QED BY <7>1,<7>2
+                          <6>2 CASE x # w
+                               <7>1 CASE y # w
+                                    BY <7>1,<6>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant5, update_record
+                               <7>2 CASE y = w
+                                    <8>1 E # {} /\ Contains(x, commitWithRef[q][max(E)])
+                                         BY <5>1,<7>2,<6>2,<4>1,<3>1,<2>1 DEF Contains,TypeOK, update_record
+                                    <8>2 max(E) \in Waves
+                                         BY <8>1,<3>1,maxIn
+                                    <8>3 commitWithRef'[q][x] = commitWithRef[q][x]
+                                         BY <6>2,<3>1,<4>1,<2>1 DEF TypeOK, update_record
+                                    <8>4 IsPrefix(commitWithRef'[q][x], commitWithRef[q][max(E)])
+                                         BY <8>1,<8>2,<8>3,<4>1,<2>1 DEF TypeOK, Invariant5
+                                    <8>5 IsPrefix(commitWithRef[q][max(E)], commitWithRef'[q][y])
+                                         BY <8>1,<5>1,<7>2,<2>1,<3>1, appendIsPrefix DEF TypeOK, update_record
+                                    <8> QED BY <8>2,<8>4,<8>5,transitiveIsPrefix,<4>1,<2>1 DEF TypeOK
+                               <7> QED BY <7>1, <7>2
+                          <6> QED BY <6>1,<6>2
+                     <5>2 CASE p # q
+                          BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant5, update_record
+                     <5> QED BY <5>1,<5>2 
+                <4> QED BY <4>1 DEF Invariant5
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant5'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                     PROVE IsPrefix(commitWithRef'[q][x], commitWithRef'[q][y])
+                     BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant5, update_decidedRefWave
+                <4> QED BY <4>1 DEF Invariant5
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant5
+           PROVE Invariant5'
+           BY <2>2 DEF vars, Invariant5
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant4correctness, PTL DEF Spec
+
+\*\A p \in Proc, w \in Waves: record[p][w].exists = TRUE => commitWithRef[p][w] = IF record[p][w].edges = {} THEN <<w>> ELSE Append(commitWithRef[p][max(record[p][w].edges)], w) 
+LEMMA Invariant6correctness == Spec => []Invariant6
+ <1>1 Init => Invariant6
+      BY DEF Init, Invariant6
+ <1>2 TypeOK /\ TypeOK' /\ Invariant6 /\ [Next]_vars /\ Invariant3 /\ Invariant3' => Invariant6'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant6, Invariant3, Invariant3'
+           PROVE Invariant6'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant6'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, record'[q][x].exists = TRUE
+                     PROVE commitWithRef'[q][x] = IF record'[q][x].edges = {} THEN <<x>> ELSE Append(commitWithRef'[q][max(record'[q][x].edges)], x)
+                     <5>1 CASE q = p /\ x = w
+                          <6>1 record'[q][x].edges = E
+                               BY <5>1,<3>1,<2>1 DEF update_record, TypeOK
+                          <6>3 E # {} => commitWithRef'[q][max(E)] = commitWithRef[q][max(E)]
+                               <7>1 E # {} => w # max(E)
+                                    BY maxIn, <3>1 DEF update_record
+                               <7> QED BY <7>1,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                          <6> QED BY <6>1, <5>1,<4>1,<3>1,<2>1,<6>3 DEF TypeOK, update_record
+                     <5>2 CASE q # p \/ x # w
+                          <6>1 commitWithRef'[q][x] = commitWithRef[q][x] 
+                               BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK,update_record
+                          <6>2 record'[q][x].edges = record[q][x].edges /\ record'[q][x].exists = record[q][x].exists
+                               BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK,update_record
+                          <6>3 record'[q][x].edges # {} => commitWithRef'[q][max(record'[q][x].edges)] = commitWithRef[q][max(record[q][x].edges)]
+                               <7>1 record[q][x].edges # {} => max(record[q][x].edges) # w \/ q # p
+                                    <8>1 record[q][x].edges # {} => record[q][max(record[q][x].edges)].exists = TRUE
+                                         <9>1 record[q][x].edges \in SUBSET(Waves)
+                                              BY <4>1,<2>1 DEF TypeOK
+                                         <9>2 record[q][x].edges # {} => max(record[q][x].edges) \in record[q][x].edges
+                                              BY <4>1,<2>1,<9>1, maxIn DEF TypeOK
+                                         <9> QED BY <2>1,<4>1,<3>1,<9>2 DEF TypeOK, Invariant3
+                                    <8> QED BY <8>1,<3>1,<4>1,<2>1, maxIn DEF TypeOK, update_record
+                               <7> QED BY <7>1,<4>1,<3>1,<2>1, <6>2 DEF TypeOK, update_record
+                          <6> QED BY <6>1,<6>2,<6>3,<4>1,<2>1 DEF Invariant6
+                     <5> QED BY <5>1,<5>2
+                <4> QED BY <4>1 DEF Invariant6
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant6'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, record'[q][x].exists = TRUE
+                     PROVE commitWithRef'[q][x] = IF record'[q][x].edges = {} THEN <<x>> ELSE Append(commitWithRef'[q][max(record'[q][x].edges)], x)
+                     BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant6, update_decidedRefWave
+                <4> QED BY <4>1 DEF Invariant6
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant6
+           PROVE Invariant6'
+           BY <2>2 DEF vars, Invariant6
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant3correctness, PTL DEF Spec
+ 
+
+LEMMA Invariant7correctness == Spec => []Invariant7
+ <1>1 Init => Invariant7
+      BY DEF Init, Invariant7
+ <1>2 TypeOK /\ TypeOK' /\ Invariant7 /\ [Next]_vars /\ Invariant6 /\ Invariant3 => Invariant7'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant7, Invariant6, Invariant3
+           PROVE Invariant7'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant7'
+                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, record'[q][x].exists = record'[r][x].exists
+                     PROVE commitWithRef'[q][x] = commitWithRef'[r][x]
+                     <5>1 CASE q = r
+                          BY <5>1
+                     <5>2 CASE q # r
+                          <6>1 CASE x # w
+                               BY <6>1,<4>1,<3>1,<2>1 DEF update_record,TypeOK,Invariant7
+                          <6>2 CASE x = w
+                               <7>1 CASE q = p
+                                    <8>1 record'[r][x].exists = record[r][x].exists /\ commitWithRef[r][x] = commitWithRef'[r][x]
+                                         BY <7>1,<5>2,<4>1,<3>1,<2>1 DEF update_record,TypeOK
+                                    <8>2 record'[q][x].exists /\ record'[r][x].exists
+                                         BY <7>1,<6>2,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                                    <8>3 commitWithRef[r][x] = IF record[r][x].edges = {} THEN <<x>> ELSE Append(commitWithRef[r][max(record[r][x].edges)], x)
+                                         BY <8>1,<4>1,<2>1,<8>2 DEF Invariant6
+                                    <8>4 E  = record[r][x].edges
+                                         BY <6>2,<4>1,<3>1,<8>1,<8>2 DEF update_record
+                                    <8>5 commitWithRef'[q][x] = IF E = {} THEN <<x>> ELSE Append(commitWithRef[q][max(E)], x)
+                                         BY <7>1,<6>2,<3>1,<2>1 DEF TypeOK, update_record
+                                    <8>7 E # {} => record[r][max(E)].exists /\ record[q][max(E)].exists
+                                         BY <8>4, maxIn,<3>1,<4>1,<2>1,<7>1 DEF Invariant3, update_record
+                                    <8>6 E # {} => commitWithRef[q][max(E)] = commitWithRef[r][max(E)]
+                                         BY <4>1,<3>1,maxIn,<2>1,<8>7 DEF Invariant7
+                                    <8> QED BY <8>3,<8>4,<8>5,<8>6,<8>1
+                               <7>2 CASE r = p
+                                    <8>1 record'[q][x].exists = record[q][x].exists /\ commitWithRef[q][x] = commitWithRef'[q][x]
+                                         BY <7>2,<5>2,<4>1,<3>1,<2>1 DEF update_record,TypeOK
+                                    <8>2 record'[r][x].exists /\ record'[q][x].exists
+                                         BY <7>2,<6>2,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                                    <8>3 commitWithRef[q][x] = IF record[q][x].edges = {} THEN <<x>> ELSE Append(commitWithRef[q][max(record[q][x].edges)], x)
+                                         BY <8>1,<4>1,<2>1,<8>2 DEF Invariant6
+                                    <8>4 E  = record[q][x].edges
+                                         BY <6>2,<4>1,<3>1,<8>1,<8>2 DEF update_record
+                                    <8>5 commitWithRef'[r][x] = IF E = {} THEN <<x>> ELSE Append(commitWithRef[r][max(E)], x)
+                                         BY <7>2,<6>2,<3>1,<2>1 DEF TypeOK, update_record
+                                    <8>7 E # {} => record[q][max(E)].exists /\ record[r][max(E)].exists
+                                         BY <8>4, maxIn,<3>1,<4>1,<2>1,<7>2 DEF Invariant3, update_record
+                                    <8>6 E # {} => commitWithRef[r][max(E)] = commitWithRef[q][max(E)]
+                                         BY <4>1,<3>1,maxIn,<2>1,<8>7 DEF Invariant7
+                                    <8> QED BY <8>3,<8>4,<8>5,<8>6,<8>1     
+                               <7>3 CASE q # p /\ r # p
+                                    BY <7>3,<4>1,<3>1,<2>1 DEF update_record,TypeOK,Invariant7
+                               <7> QED BY <7>1,<7>2,<7>3
+                          <6> QED BY <6>1,<6>2
+                     <5> QED BY <5>1,<5>2
+                <4> QED BY <4>1 DEF Invariant7
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant7'
+                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, record'[q][x].exists = record'[r][x].exists
+                     PROVE commitWithRef'[q][x] = commitWithRef'[r][x]
+                     BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant7, update_decidedRefWave
+                <4> QED BY <4>1 DEF Invariant7
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant7
+           PROVE Invariant7'
+           BY <2>2 DEF vars, Invariant7
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant3correctness, Invariant6correctness, PTL DEF Spec
+
+
+LEMMA Invariant8correctness == Spec => []Invariant8
+ <1>1 Init => Invariant8
+      BY DEF Init, Invariant8
+ <1>2 TypeOK /\ TypeOK' /\ Invariant8 /\ [Next]_vars /\ Invariant6' => Invariant8'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant8, Invariant6'
+           PROVE Invariant8'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant8'
+                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW z \in Waves, z >= x, record'[q][z].exists, \A y \in Waves : y > x /\ record'[q][y].exists => x \in record'[q][y].edges
+                     PROVE Contains(x, commitWithRef'[q][z]) 
+                     <5>1 CASE x = z
+                          <6>1 commitWithRef'[q][z] = IF record'[q][z].edges # {} THEN Append(commitWithRef'[q][max(record'[q][z].edges)], z) ELSE <<z>>
+                               BY  <2>1,<4>1 DEF Invariant6
+                          <6>2 record'[q][z].edges # {} => Contains(z, commitWithRef'[q][z]) 
+                               BY <6>1 DEF Contains
+                          <6> QED BY <5>1 ,<6>1,<6>2 DEF Contains
+                     <5>2 CASE x # z
+                          <6>1 z > x
+                               BY <5>2,<4>1
+                          <6>2 \A y \in Waves : y > x /\ record[q][y].exists => x \in record[q][y].edges
+                               <7>1 \A y \in Waves : y > x /\ (y # w \/ q # p) /\ record[q][y].exists => x \in record[q][y].edges
+                                    BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
+                               <7>2 \A y \in Waves : y > x /\ (y = w /\ q = p) => record[q][y].exists = FALSE
+                                    BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
+                               <7> QED BY <7>1,<7>2
+                          <6>3 CASE p = q /\ w = z
+                               <7>1 record'[q][z].edges = E
+                                    BY <2>1,<6>3,<3>1 DEF update_record, TypeOK
+                               <7>2 x \in E
+                                    BY <6>1,<4>1,<7>1
+                               <7>3 commitWithRef'[q][z] = Append(commitWithRef'[q][max(E)], z)
+                                    BY  <2>1,<4>1,<7>1,<7>2 DEF Invariant6
+                               <7>4 max(E) # w /\ max(E) >= x
+                                    BY <7>2,maxIn,<3>1, maxProperty DEF update_record
+                               <7>5 record[q][max(E)].exists
+                                    BY <6>3,<3>1,<7>2,maxIn DEF update_record
+                               <7>6 commitWithRef'[q][max(E)] = commitWithRef[q][max(E)]
+                                    BY <7>4,<3>1,<6>3,<2>1 DEF TypeOK, update_record
+                               <7>7 Contains(x, commitWithRef[q][max(E)])
+                                    BY <7>6,<7>5,<6>2,<7>4,<7>2,<3>1,<2>1,<4>1, maxIn DEF Invariant8
+                               <7> QED BY <7>7,<7>6,<7>3 DEF Contains
+                          <6>4 CASE p # q \/ w # z
+                               BY <6>2,<4>1,<6>4,<3>1,<2>1 DEF TypeOK, update_record, Invariant8
+                          <6> QED BY <6>3,<6>4
+                     <5> QED BY <5>1,<5>2
+                <4> QED BY <4>1 DEF Invariant8
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant8'
+                BY <3>2,<2>1 DEF TypeOK, Invariant8, update_decidedRefWave
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant8
+           PROVE Invariant8'
+           BY <2>2 DEF vars, Invariant8
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant6correctness, PTL DEF Spec
+
+
+LEMMA Invariant9correctness == Spec => []Invariant9
+ <1>1 Init => Invariant9
+      BY DEF Init, Invariant9
+ <1>2 TypeOK /\ TypeOK' /\ Invariant9 /\ [Next]_vars /\ Invariant8 /\ Invariant6 /\ Invariant3 => Invariant9'
+      <2>1 ASSUME TypeOK, TypeOK', Next, Invariant8, Invariant6, Invariant3, Invariant9
+           PROVE Invariant9'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE Invariant9'
+                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
+                     PROVE Contains(decidedRefWave'[q], commitWithRef'[r][x])
+                     <5>1 decidedRefWave'[q] = decidedRefWave[q]
+                          BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
+                     <5>2 CASE x # w
+                          <6>1 commitWithRef'[r][x] = commitWithRef[r][x] /\ record'[r][x].exists = record[r][x].exists
+                               BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK,update_record
+                          <6> QED BY <6>1,<5>1,<4>1,<2>1 DEF Invariant9
+                     <5>3 CASE x = w
+                          <6>1 CASE r = p
+                               <7>1 E # {} => commitWithRef'[r][x] = Append(commitWithRef[r][max(E)], x)
+                                    BY <3>1,<2>1,<6>1,<5>3 DEF update_record, TypeOK
+                               <7>2 CASE decidedRefWave'[q] = x 
+                                    <8>1 Contains(x, commitWithRef'[r][x])
+                                         BY <7>1,<3>1,<2>1,<5>3,<6>1 DEF Contains,update_record, TypeOK
+                                    <8> QED BY <8>1,<7>2
+                               <7>3 CASE decidedRefWave'[q] # x 
+                                    <8>1 decidedRefWave'[q] \in E /\ E # {}
+                                         <9>1 decidedRefWave'[q] < x
+                                              BY <7>3,<4>1
+                                         <9> QED BY <9>1,<5>3,<4>1,<3>1 DEF update_record
+                                    <8>2 Contains(decidedRefWave'[q], commitWithRef[r][max(E)])
+                                         <9>1 max(E) \in E
+                                              BY <8>1,<3>1,maxIn
+                                         <9>2 decidedRefWave'[q] =< max(E)
+                                              BY <8>1, maxProperty,<3>1 DEF max
+                                         <9>3 record[r][max(E)].exists = TRUE
+                                              BY <8>1,<6>1,<3>1,<9>1 DEF update_record
+                                         <9> QED BY <9>1,<4>1,<9>2,<9>3,<2>1,<5>1 DEF Invariant9, TypeOK
+                                    <8> QED BY <8>1,<7>1,<8>2 DEF Contains
+                               <7> QED BY <7>2,<7>3
+                          <6>2 CASE r # p
+                               <7>1 commitWithRef'[r][x] = commitWithRef[r][x] /\ record'[r][x].exists = record[r][x].exists
+                                    BY <6>2,<4>1,<3>1,<2>1 DEF TypeOK, update_record
+                               <7> QED BY <7>1,<5>1,<4>1,<2>1 DEF Invariant9
+                          <6> QED BY <6>1,<6>2
+                     <5> QED BY <5>2,<5>3
+                <4> QED BY <4>1 DEF Invariant9
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE Invariant9'
+                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
+                     PROVE Contains(decidedRefWave'[q], commitWithRef'[r][x])
+                     <5>1 commitWithRef'[r][x] = commitWithRef[r][x] /\ record'[r][x].exists = record[r][x].exists
+                          BY <4>1,<3>2,<2>1 DEF TypeOK,update_decidedRefWave
+                     <5>2 CASE q # p
+                          <6>1 decidedRefWave'[q] = decidedRefWave[q]
+                               BY <5>2,<4>1,<3>2,<2>1 DEF TypeOK,update_decidedRefWave
+                          <6> QED BY <6>1,<5>1,<2>1,<4>1 DEF Invariant9
+                     <5>3 CASE q = p
+                          <6>1 decidedRefWave'[q] = w
+                               BY <5>3,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
+                          <6>2 commitWithRef[r][x] = IF record[r][x].edges # {} THEN Append(commitWithRef[r][max(record[r][x].edges)], x) ELSE <<x>>
+                               BY <4>1,<2>1,<5>1 DEF Invariant6
+                          <6>3 CASE q = r
+                               <7>1 CASE x = w
+                                    <8>1 Contains(x, commitWithRef[r][x])
+                                         <9>1 CASE record[r][x].edges # {}
+                                             BY <9>1,<6>2 DEF Contains
+                                         <9>2 CASE record[r][x].edges = {} 
+                                             BY <9>2,<6>2 DEF Contains
+                                         <9> QED BY <9>1,<9>2
+                                    <8> QED BY <8>1,<7>1,<6>1,<5>1
+                               <7>2 CASE x # w
+                                    <8>1 x > w
+                                         BY <7>2,<6>1,<4>1
+                                    <8>2 record[r][x].exists = FALSE
+                                         BY <8>1,<6>3,<5>3,<3>2,<2>1,<4>1 DEF TypeOK, update_decidedRefWave
+                                    <8> QED BY <8>2,<5>1,<4>1
+                              <7> QED BY <7>1,<7>2
+                          <6>4 CASE q # r
+                              <7>1 CASE x = w
+                                   <8>1 Contains(x, commitWithRef[r][x])
+                                         <9>1 CASE record[r][x].edges # {}
+                                             BY <9>1,<6>2 DEF Contains
+                                         <9>2 CASE record[r][x].edges = {} 
+                                             BY <9>2,<6>2 DEF Contains
+                                         <9> QED BY <9>1,<9>2
+                                   <8> QED BY <8>1,<7>1,<6>1,<5>1
+                              <7>2 CASE x # w
+                                   <8>1 w \in record[r][x].edges /\ record[r][x].edges # {}
+                                        <9>1 w < x
+                                             BY <7>2,<4>1,<6>1
+                                        <9> QED BY <9>1,<5>3,<4>1,<3>2,<6>2,<4>1 DEF update_decidedRefWave
+                                   <8>2 record[r][x].edges \in SUBSET(Waves)
+                                        BY <4>1,<2>1 DEF TypeOK
+                                   <8>3 Contains(w, commitWithRef[r][max(record[r][x].edges)])     
+                                        <9>1 max(record[r][x].edges) \in record[r][x].edges
+                                             BY <8>1,<4>1,maxIn, <8>2
+                                        <9>2 w =< max(record[r][x].edges)
+                                             BY <8>1, maxProperty,<3>1,<8>2 DEF max
+                                        <9>3 record[r][max(record[r][x].edges)].exists = TRUE
+                                             BY <4>1,<2>1,<9>1 DEF Invariant3
+                                        <9>4 \A z \in Waves : z >= w /\ record[r][z].exists = TRUE => Contains(w,commitWithRef[r][z])
+                                             BY <4>1,<3>2,<2>1 DEF Invariant8, update_decidedRefWave
+                                        <9> QED BY <9>1,<9>2,<9>3,<9>4,<8>2
+                                   <8>4 Contains(w, commitWithRef[r][max(record[r][x].edges)])  => Contains(w, Append(commitWithRef[r][max(record[r][x].edges)], x))
+                                        BY DEF Contains
+                                   <8> QED BY <8>1,<8>4, <6>2, <8>3,<6>1,<5>1 DEF Contains 
+                              <7> QED BY <7>1,<7>2
+                          <6> QED BY <6>3,<6>4
+                     <5> QED BY <5>2,<5>3
+                <4> QED BY <4>1 DEF Invariant9
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, Invariant9
+           PROVE Invariant9'
+           BY <2>2 DEF vars, Invariant9
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness,Invariant8correctness,Invariant6correctness,Invariant3correctness, PTL DEF Spec
+
+LEMMA Invariant10correctness == Spec => []Invariant10
+ <1>1 Init => Invariant10
+    BY DEF Init, Invariant10
+ <1>2 Invariant1 /\ Invariant1' /\ Invariant4 /\ Invariant4' /\ Invariant7 /\ Invariant7' /\ Invariant5 /\ Invariant5'/\ Invariant9 /\ Invariant9' /\ TypeOK /\ TypeOK' /\ Invariant10 /\ [Next]_vars => Invariant10'
+      <2>1 ASSUME Invariant9, Invariant9', TypeOK, TypeOK', Invariant10, [Next]_vars, Invariant1, Invariant1', Invariant4, Invariant4', Invariant7, Invariant7', Invariant5, Invariant5'
+           PROVE Invariant10'
+           <3>1 ASSUME NEW p \in Proc, NEW q \in Proc, NEW w \in Waves, record'[p][w].exists = TRUE, w >= decidedRefWave'[q], decidedRefWave'[q] # 0
+                PROVE IsPrefix(commitWithRef'[q][decidedRefWave'[q]], commitWithRef'[p][w])
+                <4>1 Contains(decidedRefWave'[q], commitWithRef'[p][w]) 
+                     BY <3>1,<2>1 DEF Invariant9
+                <4>2 decidedRefWave'[q] \in Waves
+                     BY <3>1, <2>1 DEF TypeOK
+                <4>3 commitWithRef'[p][decidedRefWave'[q]] = commitWithRef'[q][decidedRefWave'[q]]
+                     <5>1 record'[q][decidedRefWave'[q]].exists = TRUE
+                          BY <3>1, <2>1 DEF Invariant1    
+                     <5>2 record'[p][decidedRefWave'[q]].exists = TRUE
+                          BY <3>1,<4>1,<4>2, <2>1 DEF Invariant4
+                     <5> QED BY <5>1, <5>2, <4>2, <3>1, <2>1 DEF Invariant7
+                <4>4 IsPrefix(commitWithRef'[p][decidedRefWave'[q]], commitWithRef'[p][w])
+                     BY <4>1,<4>2, <3>1, <2>1 DEF Invariant5
+                <4> QED BY <4>3,<4>4
+           <3> QED BY <3>1 DEF Invariant10
+      <2> QED BY <2>1     
+ <1> QED BY <1>1,<1>2, PTL, Typecorrectness, Invariant1correctness, Invariant4correctness,Invariant7correctness,Invariant5correctness, Invariant9correctness DEF Spec             
+ 
+LEMMA ChainConsistancycorrectness == Spec => []ChainConsistancy
+ <1>1 Init => ChainConsistancy
+      BY SelfIsPrefix DEF Init, ChainConsistancy
+ <1>2 TypeOK /\ TypeOK' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ ChainConsistancy => ChainConsistancy'
+      <2>1 ASSUME TypeOK, TypeOK', Invariant10, Invariant10', [Next]_vars, ChainConsistancy, Invariant1, Invariant1', Invariant2, Invariant2'
+           PROVE ChainConsistancy'
+           <3>1 ASSUME NEW p \in Proc, NEW q \in Proc, decidedRefWave'[p] <= decidedRefWave'[q]
+                PROVE IsPrefix(leaderSeq'[p].current, leaderSeq'[q].current)
+                <4>1 CASE decidedRefWave'[p] = 0 /\ decidedRefWave'[q] = 0
+                     <5>1 leaderSeq'[p].current = <<>> /\ leaderSeq'[q].current = <<>>
+                          BY <4>1, <2>1, <3>1 DEF Invariant2
+                     <5> QED BY <5>1, SelfIsPrefix
+                <4>2 CASE decidedRefWave'[p] = 0 /\ decidedRefWave'[q] # 0
+                     <5>1 leaderSeq'[p].current = <<>>
+                          BY <4>2, <2>1, <3>1 DEF Invariant2
+                     <5> QED BY <5>1, <2>1, EmptyIsPrefix DEF TypeOK
+                <4>3 CASE decidedRefWave'[p] # 0 /\ decidedRefWave'[q] # 0
+                     <5>1 leaderSeq'[p].current = commitWithRef'[p][decidedRefWave'[p]] /\ leaderSeq'[q].current = commitWithRef'[q][decidedRefWave'[q]]
+                          BY <4>3, <2>1, <3>1 DEF Invariant2
+                     <5>2 decidedRefWave'[q] \in Waves
+                          BY <2>1, <4>3 DEF TypeOK
+                     <5>3 record'[q][decidedRefWave'[q]].exists = TRUE
+                          BY <2>1, <3>1, <4>3 DEF Invariant1
+                     <5> QED BY <5>1, <5>2,<5>3, <2>1, <3>1, <4>3 DEF Invariant10
+                <4> QED BY <3>1, <4>1,<4>2,<4>3, <2>1 DEF TypeOK, Waves
+           <3> QED BY <3>1 DEF ChainConsistancy
+      <2> QED BY <2>1
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant10correctness, Invariant1correctness,Invariant2correctness, PTL DEF Spec
+ 
+LEMMA ChainMonotonicitycorrectness == Spec => []ChainMonotonicity
+ <1>1 Init => ChainMonotonicity
+      BY SelfIsPrefix DEF Init, ChainMonotonicity
+ <1>2 TypeOK /\ TypeOK' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ ChainMonotonicity => ChainMonotonicity'
+      <2>1 ASSUME TypeOK, TypeOK', Invariant10, Invariant10', Next, ChainMonotonicity,  Invariant1, Invariant1', Invariant2, Invariant2'
+           PROVE ChainMonotonicity'
+           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+                PROVE ChainMonotonicity'
+                BY <3>1,<2>1 DEF ChainMonotonicity, update_record
+           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+                PROVE ChainMonotonicity'
+                <4>1 ASSUME NEW q \in Proc
+                     PROVE IsPrefix(leaderSeq'[q].last, leaderSeq'[q].current)
+                     <5>1 CASE p = q
+                          <6>1 leaderSeq'[q].current = commitWithRef[q][w]
+                               BY <5>1,<3>2, <2>1 DEF update_decidedRefWave, TypeOK
+                          <6>2 leaderSeq'[q].last = leaderSeq[q].current
+                               BY <5>1,<3>2, <2>1 DEF update_decidedRefWave, TypeOK
+                          <6>3 record[q][w].exists = TRUE
+                               BY <5>1,<3>2 DEF update_decidedRefWave
+                          <6>4 w >= decidedRefWave[q]
+                               BY <5>1,<3>2 DEF update_decidedRefWave
+                          <6>5 CASE decidedRefWave[q] = 0
+                               <7>1 leaderSeq[q].current = <<>>
+                                    BY <6>5, <2>1 DEF Invariant2
+                               <7> QED BY <2>1, <5>1, <6>2, <7>1, EmptyIsPrefix DEF TypeOK
+                          <6>6 CASE decidedRefWave[q] # 0
+                               <7>1 leaderSeq'[q].last = commitWithRef[q][decidedRefWave[q]]
+                                    BY <6>2,<2>1,<4>1, <6>6 DEF Invariant2
+                               <7> QED BY <7>1, <4>1,<3>2, <6>1,<6>3,<6>4,<6>6,<2>1 DEF Invariant10
+                          <6> QED BY <6>5, <6>6
+                     <5>2 CASE p # q
+                          <6>1 leaderSeq'[q] = leaderSeq[q]
+                               BY <3>2,<4>1,<5>2 DEF update_decidedRefWave
+                          <6> QED BY <2>1, <6>1 DEF ChainMonotonicity, TypeOK
+                     <5> QED BY <5>1,<5>2    
+                <4> QED BY <4>1 DEF ChainMonotonicity
+           <3> QED BY <3>1,<3>2, <2>1 DEF Next
+      <2>2 ASSUME UNCHANGED vars, ChainMonotonicity
+           PROVE ChainMonotonicity'
+           BY <2>2 DEF vars, ChainMonotonicity
+      <2> QED BY <2>1, <2>2
+ <1> QED BY <1>1, <1>2, Typecorrectness, Invariant10correctness,  Invariant1correctness,Invariant2correctness, PTL DEF Spec
+
+=============================================================================
+\* Modification History
+\* Last modified Mon Jan 15 13:35:09 AEDT 2024 by Pranav
+\* Created Mon Jan 15 13:08:58 AEDT 2024 by Pranav
