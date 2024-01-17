@@ -1,31 +1,31 @@
 -------------------- MODULE LeaderConsensus_Verification --------------------
 EXTENDS Integers, TLAPS, TLC, Sequences, LeaderConsensus_Spec, FiniteSets, SequenceOpTheorems
 
-LEMMA maxIn == \A E \in SUBSET(Waves) : E # {} =>  max(E) \in E 
+LEMMA maxIn == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E 
       
-LEMMA maxProperty == \A E \in SUBSET(Waves) : \A x \in E: E # {} => x<=max(E)
+LEMMA maxProperty == \A E \in SUBSET(WaveSet) : \A x \in E: E # {} => x<=max(E)
 
-LEMMA SelfIsPrefix == \A S \in Seq(Waves) : IsPrefix(S, S) = TRUE
-      <1>1 \A S \in Seq(Waves) : S \o <<>> = S /\ <<>> \in Seq(Waves)
+LEMMA SelfIsPrefix == \A S \in Seq(WaveSet) : IsPrefix(S, S) = TRUE
+      <1>1 \A S \in Seq(WaveSet) : S \o <<>> = S /\ <<>> \in Seq(WaveSet)
            OBVIOUS
       <1> QED BY IsPrefixConcat, <1>1
       
-LEMMA transitiveIsPrefix == ASSUME NEW S \in Seq(Waves), NEW L \in Seq(Waves), NEW M \in Seq(Waves), IsPrefix(S,L), IsPrefix(L,M)
+LEMMA transitiveIsPrefix == ASSUME NEW S \in Seq(WaveSet), NEW L \in Seq(WaveSet), NEW M \in Seq(WaveSet), IsPrefix(S,L), IsPrefix(L,M)
                             PROVE IsPrefix(S,M)
-      <1>1 \E u,w \in Seq(Waves) : L = S \o u /\ M = L \o w
+      <1>1 \E u,w \in Seq(WaveSet) : L = S \o u /\ M = L \o w
            BY IsPrefixProperties
-      <1>2 \A n,m, u \in Seq(Waves) : (n \o m) \o u = n \o (m \o u)
+      <1>2 \A n,m, u \in Seq(WaveSet) : (n \o m) \o u = n \o (m \o u)
            OBVIOUS
-      <1>3  \E u,w \in Seq(Waves) : M = S \o (u \o w)
+      <1>3  \E u,w \in Seq(WaveSet) : M = S \o (u \o w)
            BY <1>1
-      <1>4 \A u,w \in Seq(Waves) : u \o w \in Seq(Waves) 
+      <1>4 \A u,w \in Seq(WaveSet) : u \o w \in Seq(WaveSet) 
            OBVIOUS
-      <1>5 \A u,w \in Seq(Waves) : M = S \o (u \o w) /\ u \o w \in Seq(Waves) => IsPrefix(S,M)
+      <1>5 \A u,w \in Seq(WaveSet) : M = S \o (u \o w) /\ u \o w \in Seq(WaveSet) => IsPrefix(S,M)
            BY IsPrefixConcat
       <1> QED BY <1>5,<1>4,<1>3
 
-LEMMA appendIsPrefix == \A S \in Seq(Waves), w \in Waves : IsPrefix(S, Append(S,w))
-      <1>1 \A S \in Seq(Waves), w \in Waves : <<w>> \in Seq(Waves) /\ Append(S,w) = S \o <<w>>
+LEMMA appendIsPrefix == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Append(S,w))
+      <1>1 \A S \in Seq(WaveSet), w \in WaveSet : <<w>> \in Seq(WaveSet) /\ Append(S,w) = S \o <<w>>
            OBVIOUS
       <1> QED BY <1>1, IsPrefixConcat
      
@@ -35,29 +35,29 @@ LEMMA Typecorrectness == Spec => []TypeOK
       BY DEF Init, TypeOK
  <1>2 ASSUME TypeOK, Next
       PROVE TypeOK'
-      <2>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+      <2>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
            PROVE TypeOK'
-           <3>1 record' \in [Proc -> [Waves -> [exists : BOOLEAN, edges : SUBSET(Waves)]]]
-                BY  <2>1, <1>2 DEF Proc, Waves, TypeOK, update_record
-           <3>2 commitWithRef' \in [Proc -> [Waves -> Seq(Waves)]]
-                <4>1 <<w>> \in Seq(Waves)
+           <3>1 record' \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
+                BY  <2>1, <1>2 DEF ProcessorSet, WaveSet, TypeOK, update_record
+           <3>2 commitWithRef' \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
+                <4>1 <<w>> \in Seq(WaveSet)
                      BY <2>1 
-                <4>2 E # {} =>max(E) \in Waves
+                <4>2 E # {} =>max(E) \in WaveSet
                      BY maxIn,<2>1
-                <4>3 E # {} => Append(commitWithRef[p][max(E)], w) \in Seq(Waves)
-                     <5>1 E # {} => commitWithRef[p][max(E)] \in Seq(Waves)
+                <4>3 E # {} => Append(commitWithRef[p][max(E)], w) \in Seq(WaveSet)
+                     <5>1 E # {} => commitWithRef[p][max(E)] \in Seq(WaveSet)
                           BY <2>1, <4>2,<1>2 DEF TypeOK
                      <5> QED BY <5>1, <2>1 
                 <4> QED BY  <4>1,<4>3, <2>1, <1>2 DEF TypeOK, update_record
            <3> QED BY <3>1,<3>2, <2>1,<1>2 DEF TypeOK, update_record
-      <2>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+      <2>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
            PROVE TypeOK'
-           <3>1 decidedRefWave' \in [Proc -> Waves \cup {0}]
-                BY  <2>2, <1>2 DEF Proc, Waves, TypeOK, update_decidedRefWave
-           <3>2 leaderSeq' \in [Proc -> [current : Seq(Waves), last : Seq(Waves)]]
-                <4>1 commitWithRef[p][w] \in Seq(Waves) /\ leaderSeq[p].current \in Seq(Waves)
+           <3>1 decidedRefWave' \in [ProcessorSet -> WaveSet \cup {0}]
+                BY  <2>2, <1>2 DEF ProcessorSet, WaveSet, TypeOK, update_decidedRefWave
+           <3>2 leaderSeq' \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
+                <4>1 commitWithRef[p][w] \in Seq(WaveSet) /\ leaderSeq[p].current \in Seq(WaveSet)
                      BY <2>2, <1>2 DEF TypeOK
-                <4> QED BY  <4>1, <2>2, <1>2 DEF Proc, Waves, TypeOK, update_decidedRefWave
+                <4> QED BY  <4>1, <2>2, <1>2 DEF ProcessorSet, WaveSet, TypeOK, update_decidedRefWave
            <3> QED BY <3>1,<3>2, <2>2,<1>2 DEF TypeOK, update_decidedRefWave
       <2> QED BY <2>1,<2>2, <1>2 DEF Next
  <1>3 TypeOK /\ UNCHANGED vars => TypeOK'
@@ -70,11 +70,11 @@ LEMMA Invariant1correctness == Spec => []Invariant1
  <1>2 TypeOK /\ TypeOK' /\ Invariant1 /\ [Next]_vars => Invariant1'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant1
            PROVE Invariant1'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant1'
-                <4>1 ASSUME NEW q \in Proc, decidedRefWave'[q] # 0
+                <4>1 ASSUME NEW q \in ProcessorSet, decidedRefWave'[q] # 0
                      PROVE record'[q][decidedRefWave'[q]].exists = TRUE
-                     <5>1 decidedRefWave'[q] \in Waves
+                     <5>1 decidedRefWave'[q] \in WaveSet
                           BY <2>1, <4>1 DEF TypeOK
                      <5>2 CASE decidedRefWave'[q] = w /\ p = q 
                           BY <5>2,<3>1,<2>1 DEF TypeOK, update_record
@@ -86,11 +86,11 @@ LEMMA Invariant1correctness == Spec => []Invariant1
                           <6> QED BY <6>1,<6>2, <2>1 DEF Invariant1
                      <5> QED BY <5>3,<5>2
                 <4> QED BY <4>1 DEF Invariant1
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant1'
-                <4>1 ASSUME NEW q \in Proc, decidedRefWave'[q] # 0
+                <4>1 ASSUME NEW q \in ProcessorSet, decidedRefWave'[q] # 0
                      PROVE record'[q][decidedRefWave'[q]].exists = TRUE
-                     <5>1 decidedRefWave'[q] \in Waves
+                     <5>1 decidedRefWave'[q] \in WaveSet
                           BY <2>1, <4>1 DEF TypeOK
                      <5>2 CASE  p = q 
                           BY <5>2,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
@@ -116,9 +116,9 @@ LEMMA Invariant2correctness == Spec => []Invariant2
  <1>2 TypeOK /\ TypeOK' /\ Invariant1 /\ Invariant1' /\ Invariant2 /\ [Next]_vars => Invariant2'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant2, Invariant1, Invariant1'
            PROVE Invariant2'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant2'
-                <4>1 ASSUME NEW q \in Proc 
+                <4>1 ASSUME NEW q \in ProcessorSet 
                      PROVE leaderSeq'[q].current = IF decidedRefWave'[q] = 0 THEN <<>> ELSE commitWithRef'[q][decidedRefWave'[q]]
                      <5>1 leaderSeq'[q].current = leaderSeq[q].current
                           BY <4>1, <3>1,<2>1 DEF TypeOK, update_record
@@ -136,16 +136,16 @@ LEMMA Invariant2correctness == Spec => []Invariant2
                           <6> QED BY <6>1,<6>2
                      <5> QED BY <5>1,<5>2,<5>3, <2>1 DEF Invariant2
                 <4> QED BY <4>1 DEF Invariant2  
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant2'
-                <4>1 ASSUME NEW q \in Proc 
+                <4>1 ASSUME NEW q \in ProcessorSet 
                      PROVE leaderSeq'[q].current = IF decidedRefWave'[q] = 0 THEN <<>> ELSE commitWithRef'[q][decidedRefWave'[q]]
                      <5>1 CASE p = q
                           <6>1 decidedRefWave'[q] = w
                                BY <5>1, <3>2,<2>1 DEF TypeOK, update_decidedRefWave
                           <6>2 leaderSeq'[q].current = commitWithRef'[q][decidedRefWave'[q]]
                                BY <5>1, <3>2,<2>1, <6>1 DEF TypeOK, update_decidedRefWave
-                          <6> QED BY <6>1, <6>2, <3>1 DEF Waves
+                          <6> QED BY <6>1, <6>2, <3>1 DEF WaveSet
                      <5>2 CASE p # q
                           <6>1 leaderSeq'[q].current =leaderSeq[q].current
                                BY <4>1, <5>2, <3>2,<2>1 DEF TypeOK, update_decidedRefWave
@@ -170,11 +170,11 @@ LEMMA Invariant3correctness == Spec => []Invariant3
  <1>2 TypeOK /\ TypeOK' /\ Invariant3 /\ [Next]_vars => Invariant3'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant3
            PROVE Invariant3'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant3'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in record'[q][x].edges
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in record'[q][x].edges
                      PROVE record'[q][y].exists = TRUE
-                     <5>1 y \in Waves
+                     <5>1 y \in WaveSet
                           BY <4>1, <2>1 DEF TypeOK
                      <5>2 CASE q = p /\ x = w
                           BY <5>2,<3>1,<2>1,<4>1 DEF TypeOK, update_record
@@ -190,9 +190,9 @@ LEMMA Invariant3correctness == Spec => []Invariant3
                           <6> QED BY <6>1,<6>2,<4>1,<2>1 DEF Invariant3, TypeOK
                      <5> QED  BY <5>2,<5>3 
                 <4> QED BY <4>1 DEF Invariant3
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant3'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in record'[q][x].edges
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in record'[q][x].edges
                      PROVE record'[q][y].exists = TRUE 
                      <5>1 record'[q][x].edges = record[q][x].edges 
                           BY <4>1,<3>2,<2>1 DEF TypeOK, update_decidedRefWave
@@ -214,9 +214,9 @@ LEMMA Invariant4correctness == Spec => []Invariant4
  <1>2 TypeOK /\ TypeOK' /\ Invariant4 /\ [Next]_vars => Invariant4'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant4
            PROVE Invariant4'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant4'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in WaveSet, Contains(x, commitWithRef'[q][y])
                      PROVE record'[q][x].exists = TRUE
                      <5>1 CASE p = q
                           <6>1 CASE x = w
@@ -238,9 +238,9 @@ LEMMA Invariant4correctness == Spec => []Invariant4
                           BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant4, update_record
                      <5> QED BY <5>1,<5>2 
                 <4> QED BY <4>1 DEF Invariant4
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant4'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in WaveSet, Contains(x, commitWithRef'[q][y])
                      PROVE record'[q][x].exists = TRUE
                      BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant4, update_decidedRefWave
                 <4> QED BY <4>1 DEF Invariant4
@@ -258,9 +258,9 @@ LEMMA Invariant5correctness == Spec => []Invariant5
  <1>2 TypeOK /\ TypeOK' /\ Invariant5 /\ [Next]_vars /\ Invariant4 /\ Invariant4' => Invariant5'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant5, Invariant4, Invariant4'
            PROVE Invariant5'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant5'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in WaveSet, Contains(x, commitWithRef'[q][y])
                      PROVE IsPrefix(commitWithRef'[q][x], commitWithRef'[q][y])
                      <5>1 CASE p = q
                           <6>1 CASE x = w
@@ -283,7 +283,7 @@ LEMMA Invariant5correctness == Spec => []Invariant5
                                <7>2 CASE y = w
                                     <8>1 E # {} /\ Contains(x, commitWithRef[q][max(E)])
                                          BY <5>1,<7>2,<6>2,<4>1,<3>1,<2>1 DEF Contains,TypeOK, update_record
-                                    <8>2 max(E) \in Waves
+                                    <8>2 max(E) \in WaveSet
                                          BY <8>1,<3>1,maxIn
                                     <8>3 commitWithRef'[q][x] = commitWithRef[q][x]
                                          BY <6>2,<3>1,<4>1,<2>1 DEF TypeOK, update_record
@@ -298,9 +298,9 @@ LEMMA Invariant5correctness == Spec => []Invariant5
                           BY <5>2,<4>1,<3>1,<2>1 DEF TypeOK, Invariant5, update_record
                      <5> QED BY <5>1,<5>2 
                 <4> QED BY <4>1 DEF Invariant5
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant5'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW y \in Waves, Contains(x, commitWithRef'[q][y])
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW y \in WaveSet, Contains(x, commitWithRef'[q][y])
                      PROVE IsPrefix(commitWithRef'[q][x], commitWithRef'[q][y])
                      BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant5, update_decidedRefWave
                 <4> QED BY <4>1 DEF Invariant5
@@ -311,16 +311,16 @@ LEMMA Invariant5correctness == Spec => []Invariant5
       <2> QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, Typecorrectness, Invariant4correctness, PTL DEF Spec
 
-\*\A p \in Proc, w \in Waves: record[p][w].exists = TRUE => commitWithRef[p][w] = IF record[p][w].edges = {} THEN <<w>> ELSE Append(commitWithRef[p][max(record[p][w].edges)], w) 
+\*\A p \in ProcessorSet, w \in WaveSet: record[p][w].exists = TRUE => commitWithRef[p][w] = IF record[p][w].edges = {} THEN <<w>> ELSE Append(commitWithRef[p][max(record[p][w].edges)], w) 
 LEMMA Invariant6correctness == Spec => []Invariant6
  <1>1 Init => Invariant6
       BY DEF Init, Invariant6
  <1>2 TypeOK /\ TypeOK' /\ Invariant6 /\ [Next]_vars /\ Invariant3 /\ Invariant3' => Invariant6'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant6, Invariant3, Invariant3'
            PROVE Invariant6'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant6'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, record'[q][x].exists = TRUE
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, record'[q][x].exists = TRUE
                      PROVE commitWithRef'[q][x] = IF record'[q][x].edges = {} THEN <<x>> ELSE Append(commitWithRef'[q][max(record'[q][x].edges)], x)
                      <5>1 CASE q = p /\ x = w
                           <6>1 record'[q][x].edges = E
@@ -338,7 +338,7 @@ LEMMA Invariant6correctness == Spec => []Invariant6
                           <6>3 record'[q][x].edges # {} => commitWithRef'[q][max(record'[q][x].edges)] = commitWithRef[q][max(record[q][x].edges)]
                                <7>1 record[q][x].edges # {} => max(record[q][x].edges) # w \/ q # p
                                     <8>1 record[q][x].edges # {} => record[q][max(record[q][x].edges)].exists = TRUE
-                                         <9>1 record[q][x].edges \in SUBSET(Waves)
+                                         <9>1 record[q][x].edges \in SUBSET(WaveSet)
                                               BY <4>1,<2>1 DEF TypeOK
                                          <9>2 record[q][x].edges # {} => max(record[q][x].edges) \in record[q][x].edges
                                               BY <4>1,<2>1,<9>1, maxIn DEF TypeOK
@@ -348,9 +348,9 @@ LEMMA Invariant6correctness == Spec => []Invariant6
                           <6> QED BY <6>1,<6>2,<6>3,<4>1,<2>1 DEF Invariant6
                      <5> QED BY <5>1,<5>2
                 <4> QED BY <4>1 DEF Invariant6
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant6'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, record'[q][x].exists = TRUE
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, record'[q][x].exists = TRUE
                      PROVE commitWithRef'[q][x] = IF record'[q][x].edges = {} THEN <<x>> ELSE Append(commitWithRef'[q][max(record'[q][x].edges)], x)
                      BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant6, update_decidedRefWave
                 <4> QED BY <4>1 DEF Invariant6
@@ -368,9 +368,9 @@ LEMMA Invariant7correctness == Spec => []Invariant7
  <1>2 TypeOK /\ TypeOK' /\ Invariant7 /\ [Next]_vars /\ Invariant6 /\ Invariant3 => Invariant7'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant7, Invariant6, Invariant3
            PROVE Invariant7'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant7'
-                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, record'[q][x].exists = record'[r][x].exists
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW r \in ProcessorSet, NEW x \in WaveSet, record'[q][x].exists = record'[r][x].exists
                      PROVE commitWithRef'[q][x] = commitWithRef'[r][x]
                      <5>1 CASE q = r
                           BY <5>1
@@ -416,9 +416,9 @@ LEMMA Invariant7correctness == Spec => []Invariant7
                           <6> QED BY <6>1,<6>2
                      <5> QED BY <5>1,<5>2
                 <4> QED BY <4>1 DEF Invariant7
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant7'
-                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, record'[q][x].exists = record'[r][x].exists
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW r \in ProcessorSet, NEW x \in WaveSet, record'[q][x].exists = record'[r][x].exists
                      PROVE commitWithRef'[q][x] = commitWithRef'[r][x]
                      BY <4>1,<3>2,<2>1 DEF TypeOK, Invariant7, update_decidedRefWave
                 <4> QED BY <4>1 DEF Invariant7
@@ -436,9 +436,9 @@ LEMMA Invariant8correctness == Spec => []Invariant8
  <1>2 TypeOK /\ TypeOK' /\ Invariant8 /\ [Next]_vars /\ Invariant6' => Invariant8'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant8, Invariant6'
            PROVE Invariant8'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant8'
-                <4>1 ASSUME NEW q \in Proc, NEW x \in Waves, NEW z \in Waves, z >= x, record'[q][z].exists, \A y \in Waves : y > x /\ record'[q][y].exists => x \in record'[q][y].edges
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW x \in WaveSet, NEW z \in WaveSet, z >= x, record'[q][z].exists, \A y \in WaveSet : y > x /\ record'[q][y].exists => x \in record'[q][y].edges
                      PROVE Contains(x, commitWithRef'[q][z]) 
                      <5>1 CASE x = z
                           <6>1 commitWithRef'[q][z] = IF record'[q][z].edges # {} THEN Append(commitWithRef'[q][max(record'[q][z].edges)], z) ELSE <<z>>
@@ -449,10 +449,10 @@ LEMMA Invariant8correctness == Spec => []Invariant8
                      <5>2 CASE x # z
                           <6>1 z > x
                                BY <5>2,<4>1
-                          <6>2 \A y \in Waves : y > x /\ record[q][y].exists => x \in record[q][y].edges
-                               <7>1 \A y \in Waves : y > x /\ (y # w \/ q # p) /\ record[q][y].exists => x \in record[q][y].edges
+                          <6>2 \A y \in WaveSet : y > x /\ record[q][y].exists => x \in record[q][y].edges
+                               <7>1 \A y \in WaveSet : y > x /\ (y # w \/ q # p) /\ record[q][y].exists => x \in record[q][y].edges
                                     BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
-                               <7>2 \A y \in Waves : y > x /\ (y = w /\ q = p) => record[q][y].exists = FALSE
+                               <7>2 \A y \in WaveSet : y > x /\ (y = w /\ q = p) => record[q][y].exists = FALSE
                                     BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
                                <7> QED BY <7>1,<7>2
                           <6>3 CASE p = q /\ w = z
@@ -476,7 +476,7 @@ LEMMA Invariant8correctness == Spec => []Invariant8
                           <6> QED BY <6>3,<6>4
                      <5> QED BY <5>1,<5>2
                 <4> QED BY <4>1 DEF Invariant8
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant8'
                 BY <3>2,<2>1 DEF TypeOK, Invariant8, update_decidedRefWave
            <3> QED BY <3>1,<3>2, <2>1 DEF Next
@@ -493,9 +493,9 @@ LEMMA Invariant9correctness == Spec => []Invariant9
  <1>2 TypeOK /\ TypeOK' /\ Invariant9 /\ [Next]_vars /\ Invariant8 /\ Invariant6 /\ Invariant3 => Invariant9'
       <2>1 ASSUME TypeOK, TypeOK', Next, Invariant8, Invariant6, Invariant3, Invariant9
            PROVE Invariant9'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE Invariant9'
-                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW r \in ProcessorSet, NEW x \in WaveSet, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
                      PROVE Contains(decidedRefWave'[q], commitWithRef'[r][x])
                      <5>1 decidedRefWave'[q] = decidedRefWave[q]
                           BY <4>1,<3>1,<2>1 DEF TypeOK, update_record
@@ -533,9 +533,9 @@ LEMMA Invariant9correctness == Spec => []Invariant9
                           <6> QED BY <6>1,<6>2
                      <5> QED BY <5>2,<5>3
                 <4> QED BY <4>1 DEF Invariant9
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE Invariant9'
-                <4>1 ASSUME NEW q \in Proc, NEW r \in Proc, NEW x \in Waves, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
+                <4>1 ASSUME NEW q \in ProcessorSet, NEW r \in ProcessorSet, NEW x \in WaveSet, decidedRefWave'[q] # 0, x >= decidedRefWave'[q], record'[r][x].exists = TRUE
                      PROVE Contains(decidedRefWave'[q], commitWithRef'[r][x])
                      <5>1 commitWithRef'[r][x] = commitWithRef[r][x] /\ record'[r][x].exists = record[r][x].exists
                           BY <4>1,<3>2,<2>1 DEF TypeOK,update_decidedRefWave
@@ -578,7 +578,7 @@ LEMMA Invariant9correctness == Spec => []Invariant9
                                         <9>1 w < x
                                              BY <7>2,<4>1,<6>1
                                         <9> QED BY <9>1,<5>3,<4>1,<3>2,<6>2,<4>1 DEF update_decidedRefWave
-                                   <8>2 record[r][x].edges \in SUBSET(Waves)
+                                   <8>2 record[r][x].edges \in SUBSET(WaveSet)
                                         BY <4>1,<2>1 DEF TypeOK
                                    <8>3 Contains(w, commitWithRef[r][max(record[r][x].edges)])     
                                         <9>1 max(record[r][x].edges) \in record[r][x].edges
@@ -587,7 +587,7 @@ LEMMA Invariant9correctness == Spec => []Invariant9
                                              BY <8>1, maxProperty,<3>1,<8>2 DEF max
                                         <9>3 record[r][max(record[r][x].edges)].exists = TRUE
                                              BY <4>1,<2>1,<9>1 DEF Invariant3
-                                        <9>4 \A z \in Waves : z >= w /\ record[r][z].exists = TRUE => Contains(w,commitWithRef[r][z])
+                                        <9>4 \A z \in WaveSet : z >= w /\ record[r][z].exists = TRUE => Contains(w,commitWithRef[r][z])
                                              BY <4>1,<3>2,<2>1 DEF Invariant8, update_decidedRefWave
                                         <9> QED BY <9>1,<9>2,<9>3,<9>4,<8>2
                                    <8>4 Contains(w, commitWithRef[r][max(record[r][x].edges)])  => Contains(w, Append(commitWithRef[r][max(record[r][x].edges)], x))
@@ -610,11 +610,11 @@ LEMMA Invariant10correctness == Spec => []Invariant10
  <1>2 Invariant1 /\ Invariant1' /\ Invariant4 /\ Invariant4' /\ Invariant7 /\ Invariant7' /\ Invariant5 /\ Invariant5'/\ Invariant9 /\ Invariant9' /\ TypeOK /\ TypeOK' /\ Invariant10 /\ [Next]_vars => Invariant10'
       <2>1 ASSUME Invariant9, Invariant9', TypeOK, TypeOK', Invariant10, [Next]_vars, Invariant1, Invariant1', Invariant4, Invariant4', Invariant7, Invariant7', Invariant5, Invariant5'
            PROVE Invariant10'
-           <3>1 ASSUME NEW p \in Proc, NEW q \in Proc, NEW w \in Waves, record'[p][w].exists = TRUE, w >= decidedRefWave'[q], decidedRefWave'[q] # 0
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, NEW w \in WaveSet, record'[p][w].exists = TRUE, w >= decidedRefWave'[q], decidedRefWave'[q] # 0
                 PROVE IsPrefix(commitWithRef'[q][decidedRefWave'[q]], commitWithRef'[p][w])
                 <4>1 Contains(decidedRefWave'[q], commitWithRef'[p][w]) 
                      BY <3>1,<2>1 DEF Invariant9
-                <4>2 decidedRefWave'[q] \in Waves
+                <4>2 decidedRefWave'[q] \in WaveSet
                      BY <3>1, <2>1 DEF TypeOK
                 <4>3 commitWithRef'[p][decidedRefWave'[q]] = commitWithRef'[q][decidedRefWave'[q]]
                      <5>1 record'[q][decidedRefWave'[q]].exists = TRUE
@@ -635,7 +635,7 @@ LEMMA ChainConsistancycorrectness == Spec => []ChainConsistancy
  <1>2 TypeOK /\ TypeOK' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ ChainConsistancy => ChainConsistancy'
       <2>1 ASSUME TypeOK, TypeOK', Invariant10, Invariant10', [Next]_vars, ChainConsistancy, Invariant1, Invariant1', Invariant2, Invariant2'
            PROVE ChainConsistancy'
-           <3>1 ASSUME NEW p \in Proc, NEW q \in Proc, decidedRefWave'[p] <= decidedRefWave'[q]
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, decidedRefWave'[p] <= decidedRefWave'[q]
                 PROVE IsPrefix(leaderSeq'[p].current, leaderSeq'[q].current)
                 <4>1 CASE decidedRefWave'[p] = 0 /\ decidedRefWave'[q] = 0
                      <5>1 leaderSeq'[p].current = <<>> /\ leaderSeq'[q].current = <<>>
@@ -648,12 +648,12 @@ LEMMA ChainConsistancycorrectness == Spec => []ChainConsistancy
                 <4>3 CASE decidedRefWave'[p] # 0 /\ decidedRefWave'[q] # 0
                      <5>1 leaderSeq'[p].current = commitWithRef'[p][decidedRefWave'[p]] /\ leaderSeq'[q].current = commitWithRef'[q][decidedRefWave'[q]]
                           BY <4>3, <2>1, <3>1 DEF Invariant2
-                     <5>2 decidedRefWave'[q] \in Waves
+                     <5>2 decidedRefWave'[q] \in WaveSet
                           BY <2>1, <4>3 DEF TypeOK
                      <5>3 record'[q][decidedRefWave'[q]].exists = TRUE
                           BY <2>1, <3>1, <4>3 DEF Invariant1
                      <5> QED BY <5>1, <5>2,<5>3, <2>1, <3>1, <4>3 DEF Invariant10
-                <4> QED BY <3>1, <4>1,<4>2,<4>3, <2>1 DEF TypeOK, Waves
+                <4> QED BY <3>1, <4>1,<4>2,<4>3, <2>1 DEF TypeOK, WaveSet
            <3> QED BY <3>1 DEF ChainConsistancy
       <2> QED BY <2>1
  <1> QED BY <1>1, <1>2, Typecorrectness, Invariant10correctness, Invariant1correctness,Invariant2correctness, PTL DEF Spec
@@ -664,12 +664,12 @@ LEMMA ChainMonotonicitycorrectness == Spec => []ChainMonotonicity
  <1>2 TypeOK /\ TypeOK' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ ChainMonotonicity => ChainMonotonicity'
       <2>1 ASSUME TypeOK, TypeOK', Invariant10, Invariant10', Next, ChainMonotonicity,  Invariant1, Invariant1', Invariant2, Invariant2'
            PROVE ChainMonotonicity'
-           <3>1 ASSUME NEW p \in Proc, NEW w \in Waves, NEW E \in SUBSET(Waves), update_record(p, w, E)
+           <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), update_record(p, w, E)
                 PROVE ChainMonotonicity'
                 BY <3>1,<2>1 DEF ChainMonotonicity, update_record
-           <3>2 ASSUME NEW p \in Proc, NEW w \in Waves, update_decidedRefWave(p, w)
+           <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, update_decidedRefWave(p, w)
                 PROVE ChainMonotonicity'
-                <4>1 ASSUME NEW q \in Proc
+                <4>1 ASSUME NEW q \in ProcessorSet
                      PROVE IsPrefix(leaderSeq'[q].last, leaderSeq'[q].current)
                      <5>1 CASE p = q
                           <6>1 leaderSeq'[q].current = commitWithRef[q][w]
