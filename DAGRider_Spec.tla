@@ -42,11 +42,11 @@ NilVertices == {nil_vertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 
-VARIABLE blocksToPropose, DAGround, DAG, bcastNetwork, bcastRecord, buffer, record, decidedRefWave, leaderSeq, commitWithRef
+VARIABLE blocksToPropose, DAGround, DAG, bcastNetwork, bcastRecord, buffer, waveDAG, decidedRefWave, leaderSeq, commitWithRef
 
 ----------------------------------------------------------------------------
 
-Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, NumProcessors <- NumProcessors,  record <- record, decidedRefWave <- decidedRefWave, 
+Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, NumProcessors <- NumProcessors,  waveDAG <- waveDAG, decidedRefWave <- decidedRefWave, 
                                                      leaderSeq <- leaderSeq, commitWithRef <- commitWithRef
 
 ----------------------------------------------------------------------------
@@ -95,14 +95,14 @@ bcast(p, r, v) == IF bcastRecord[p][r] = FALSE
                        /\ bcastNetwork' = [q \in ProcessorSet \cup {"History"} |-> bcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}]
                   ELSE UNCHANGED <<bcastNetwork, bcastRecord>>
                   
-wave_ready(p, w) == IF DAG[p][4*w-3][wave_vertex_leader(p, w)] \in Vertices /\ \E Q \in SUBSET(added_vertices(p,4*w)): Cardinality(Q) > 2NumFaultyProcessors /\ \A u \in Q : path(u, wave_vertex_leader(p, w))
+wave_ready(p, w) == IF DAG[p][4*w-3][wave_vertex_leader(p, w)] \in Vertices /\ \E Q \in SUBSET(added_vertices(p,4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : path(u, wave_vertex_leader(p, w))
                     THEN Chain!update_decidedRefWave(p, w)
                     ELSE UNCHANGED Chain!vars 
 
 ----------------------------------------------------------------------------
 
 next_round(p) == /\ DAGround[p]+1 \in RoundSet
-                 /\ Cardinality(added_vertices(p,DAGround[p])) > 2NumFaultyProcessors
+                 /\ Cardinality(added_vertices(p,DAGround[p])) > 2*NumFaultyProcessors
                  /\ blocksToPropose[p] # <<>>
                  /\ bcast(p, DAGround[p]+1, create_new_vertex(p,DAGround[p]+1))
                  /\ DAGround' = [DAGround EXCEPT ![p] = DAGround[p]+1]
@@ -117,7 +117,7 @@ propose(p,b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(bloc
 recieve_vertex(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in bcastNetwork[p]
                               /\ v.source = q 
                               /\ v.round = r
-                              /\ Cardinality(v.edges) > 2NumFaultyProcessors
+                              /\ Cardinality(v.edges) > 2*NumFaultyProcessors
                               /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
                               /\ bcastNetwork' = [bcastNetwork EXCEPT ![p] = bcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
                               /\ UNCHANGED Chain!vars
@@ -128,7 +128,7 @@ add_vertex(p,v) == /\ v \in buffer[p]
                    /\ DAG[p][v.round][v.source] = nil_vertex(v.source, v.round)
                    /\ v.edges \in added_vertices(p, v.round -1)
                    /\ DAG'= [DAG EXCEPT ![p][v.round][v.source] = v]
-                   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN Chain!update_record(p,(v.round \div 4)+1, waves_with_paths(p,v)) ELSE UNCHANGED Chain!vars
+                   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN Chain!update_waveDAG(p,(v.round \div 4)+1, waves_with_paths(p,v)) ELSE UNCHANGED Chain!vars
                    /\ UNCHANGED <<blocksToPropose, DAGround, bcastNetwork, bcastRecord, buffer>>
 
 ----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ Next == \E p \in ProcessorSet, r \in RoundSet, v \in Vertices, b \in BlockSet: \
 
 ----------------------------------------------------------------------------
                                                                                        
-vars == <<blocksToPropose, DAGround, bcastNetwork, bcastRecord, buffer, DAG, record, decidedRefWave, leaderSeq, commitWithRef>>
+vars == <<blocksToPropose, DAGround, bcastNetwork, bcastRecord, buffer, DAG, waveDAG, decidedRefWave, leaderSeq, commitWithRef>>
 
 Spec == Init /\ [][Next]_vars
 
