@@ -24,7 +24,7 @@ Init == /\ waveDAG = [p \in ProcessorSet |-> [w \in WaveSet |->[exists |-> FALSE
         
 max(E) == IF E # {} /\ Cardinality(E) \in Nat THEN CHOOSE x \in E : \A y \in E : y <= x ELSE "Error"   
   
-update_waveDAG(p, w, E) == /\ waveDAG[p][w].exists = FALSE
+UpdateWaveTn(p, w, E) == /\ waveDAG[p][w].exists = FALSE
                            /\ \A x \in E : waveDAG[p][x].exists = TRUE
                            /\ \A x \in E : x < w
                            /\ \A q \in ProcessorSet : waveDAG[q][w].exists = TRUE => waveDAG[q][w].edges = E
@@ -33,7 +33,7 @@ update_waveDAG(p, w, E) == /\ waveDAG[p][w].exists = FALSE
                            /\ commitWithRef' = [commitWithRef EXCEPT ![p][w] = IF E = {} THEN <<w>> ELSE Append(commitWithRef[p][max(E)], w)]
                            /\ UNCHANGED <<decidedWave, leaderSeq>>
 
-update_decidedWave(p, w) ==    /\ waveDAG[p][w].exists = TRUE
+UpdateDecidedWaveTn(p, w) ==    /\ waveDAG[p][w].exists = TRUE
                                /\ w >= decidedWave[p]
                                /\ \A x \in WaveSet : x > w => waveDAG[p][x].exists = FALSE 
                                /\ \A q \in ProcessorSet, x \in WaveSet : x > w /\ waveDAG[q][x].exists = TRUE => w \in waveDAG[q][x].edges
@@ -41,7 +41,7 @@ update_decidedWave(p, w) ==    /\ waveDAG[p][w].exists = TRUE
                                /\ leaderSeq' = [leaderSeq EXCEPT ![p] = [current |-> commitWithRef[p][w] ,last |-> leaderSeq[p].current]]
                                /\ UNCHANGED <<waveDAG, commitWithRef>>
                                
-Next == \E p \in ProcessorSet, w \in WaveSet, E \in SUBSET(WaveSet) : update_waveDAG(p, w, E) \/ update_decidedWave(p, w)
+Next == \E p \in ProcessorSet, w \in WaveSet, E \in SUBSET(WaveSet) : UpdateWaveTn(p, w, E) \/ UpdateDecidedWaveTn(p, w)
 
 vars == <<waveDAG, decidedWave, leaderSeq, commitWithRef>>
 
