@@ -1,13 +1,14 @@
---------------------------- MODULE DAGRider_Spec ---------------------------
+------------------------- MODULE DAGRider_Spec -------------------------
 EXTENDS Sequences, FiniteSets, Integers, TLAPS, TLC
 
-CONSTANT NumProcessors,
-         NumWaves, 
-         BlockSet,
-         ChooseLeader(_) 
-         
+CONSTANT NumProcessors
 ASSUME NumProcessorAsm == NumProcessors \in Nat\{0}
+
+CONSTANT NumWaves 
 ASSUME NumWaveAsm == NumWaves \in Nat\{0}
+
+CONSTANT BlockSet
+CONSTANT ChooseLeader(_) 
 
 ----------------------------------------------------------------------------
 
@@ -20,148 +21,148 @@ WaveSet == 1..NumWaves
 ProcessorSet == 1..NumProcessors
 ASSUME ProcSetAsm == "History" \notin ProcessorSet
 
-RECURSIVE vertices_in(_), vertices_till(_), Vertices
+RECURSIVE InRoundVertex(_), UntilRoundVertex(_), VertexSet
 
-dummy_vertex(p) == [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
-DummyVertices == {dummy_vertex(p) : p \in ProcessorSet}
+DummyVertex(p) == [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
+DummyVertexSet == {DummyVertex(p) : p \in ProcessorSet}
 
-vertices_in(r) == IF r = 0 
-                 THEN DummyVertices
-                 ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(vertices_in(r-1))]
+InRoundVertex(r) == IF r = 0 
+                 THEN DummyVertexSet
+                 ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(InRoundVertex(r-1))]
                
-vertices_till(r) == IF r = 0
-                   THEN vertices_in(r)
-                   ELSE vertices_in(r) \cup vertices_till(r-1)
+UntilRoundVertex(r) == IF r = 0
+                   THEN InRoundVertex(r)
+                   ELSE InRoundVertex(r) \cup UntilRoundVertex(r-1)
                    
-Vertices == vertices_till(4*NumWaves)
+VertexSet == UntilRoundVertex(4*NumWaves)
 
-TaggedVertices == [sender : ProcessorSet, inRound : RoundSet, vertex : Vertices]
+TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
 
-nil_vertex(p,r) == [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
-NilVertices == {nil_vertex(p, r) : p \in ProcessorSet, r \in RoundSet}
-
-----------------------------------------------------------------------------
-
-VARIABLE blocksToPropose, DAGround, DAG, bcastNetwork, bcastRecord, buffer, waveDAG, decidedRefWave, leaderSeq, commitWithRef
+NilVertex(p,r) == [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
+NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 
-Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, NumProcessors <- NumProcessors,  waveDAG <- waveDAG, decidedRefWave <- decidedRefWave, 
-                                                     leaderSeq <- leaderSeq, commitWithRef <- commitWithRef
+VARIABLE blocksToPropose, round, dag, broadcastNetwork, broadcastRecord, buffer, leaderReachablity, decidedWave, leaderSeq, commitWithRef
 
 ----------------------------------------------------------------------------
 
-TypeOK == /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
-          /\ DAGround \in [ProcessorSet -> RoundSet]
-          /\ bcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertices)]
-          /\ bcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
-          /\ buffer \in [ProcessorSet -> SUBSET(Vertices)]
-          /\ DAG \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> Vertices \cup NilVertices]]]
+Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, NumProcessors <- NumProcessors,  leaderReachablity <- leaderReachablity, decidedWave <- decidedWave, 
+                                                          leaderSeq <- leaderSeq, commitWithRef <- commitWithRef
 
-TypeOK_System == TypeOK /\ Chain!TypeOK
+----------------------------------------------------------------------------
+
+StateType == 
+          /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
+          /\ round \in [ProcessorSet -> RoundSet]
+          /\ broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
+          /\ broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+          /\ buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+          /\ dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+
+StateType_System == StateType /\ Chain!StateType
 
 ----------------------------------------------------------------------------
 
 Init == /\ blocksToPropose = [p \in ProcessorSet |-> <<>> ]
-        /\ DAGround = [p \in ProcessorSet |-> 0]
-        /\ bcastNetwork = [p \in ProcessorSet \cup {"History"} |-> {}]
-        /\ bcastRecord  = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
+        /\ round = [p \in ProcessorSet |-> 0]
+        /\ broadcastNetwork = [p \in ProcessorSet \cup {"History"} |-> {}]
+        /\ broadcastRecord  = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
         /\ buffer = [p \in ProcessorSet |-> {}]
-        /\ DAG = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN dummy_vertex(q) ELSE nil_vertex(q,r)]]]
+        /\ dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q,r)]]]
         /\ Chain!Init
 
 ----------------------------------------------------------------------------
 
-RECURSIVE path(_,_)
+RECURSIVE Path(_,_)
 
-path(u,v) == IF u = v
+Path(u,v) == IF u = v
                THEN TRUE
                ELSE IF u.round = 0
                     THEN FALSE
-                    ELSE \E x \in u.edges : path(x,v)
+                    ELSE \E x \in u.edges : Path(x,v)
 
-added_vertices(p,r) == {v \in Vertices : v.round = r /\ DAG[p][r][v.source] = v}
+AddedVertices(p,r) == {v \in VertexSet : v.round = r /\ dag[p][r][v.source] = v}
                    
 \*ChooseLeader(w) == (w % NumProcessors) + 1
 
-wave_vertex_leader(p, w) == DAG[p][4*w-3][ChooseLeader(w)]
+WaveLeader(p, w) == dag[p][4*w-3][ChooseLeader(w)]
 
-waves_with_paths(p,v) == {w \in WaveSet : path(v,wave_vertex_leader(p, w))}                          
+ConnectedWaves(p,v) == {w \in WaveSet : Path(v,WaveLeader(p, w))}                          
 
-create_new_vertex(p, r) == [round |-> r, source |-> p, block |-> Head(blocksToPropose[p]), edges |-> added_vertices(p,r-1)]
+CreateVertex(p, r) == [round |-> r, source |-> p, block |-> Head(blocksToPropose[p]), edges |-> AddedVertices(p,r-1)]
 
-bcast(p, r, v) == IF bcastRecord[p][r] = FALSE 
-                  THEN /\ bcastRecord' = [bcastRecord EXCEPT ![p][r] = TRUE]
-                       /\ bcastNetwork' = [q \in ProcessorSet \cup {"History"} |-> bcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}]
-                  ELSE UNCHANGED <<bcastNetwork, bcastRecord>>
+Broadcast(p, r, v) == IF broadcastRecord[p][r] = FALSE 
+                      THEN /\ broadcastRecord' = [broadcastRecord EXCEPT ![p][r] = TRUE]
+                           /\ broadcastNetwork' = [q \in ProcessorSet \cup {"History"} |-> broadcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}]
+                      ELSE UNCHANGED <<broadcastNetwork, broadcastRecord>>
                   
-wave_ready(p, w) == IF DAG[p][4*w-3][wave_vertex_leader(p, w)] \in Vertices /\ \E Q \in SUBSET(added_vertices(p,4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : path(u, wave_vertex_leader(p, w))
-                    THEN Chain!update_decidedRefWave(p, w)
-                    ELSE UNCHANGED Chain!vars 
+ReadyWave(p, w) == IF dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet /\ \E Q \in SUBSET(AddedVertices(p,4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : Path(u, WaveLeader(p, w))
+                   THEN Chain!UpdateDecidedWaveTn(p, w)
+                   ELSE UNCHANGED Chain!vars 
 
 ----------------------------------------------------------------------------
 
-next_round(p) == /\ DAGround[p]+1 \in RoundSet
-                 /\ Cardinality(added_vertices(p,DAGround[p])) > 2*NumFaultyProcessors
-                 /\ blocksToPropose[p] # <<>>
-                 /\ bcast(p, DAGround[p]+1, create_new_vertex(p,DAGround[p]+1))
-                 /\ DAGround' = [DAGround EXCEPT ![p] = DAGround[p]+1]
-                 /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
-                 /\ IF DAGround[p]>0 /\ (DAGround[p] % 4) = 0 THEN wave_ready(p, (DAGround[p] \div 4)) ELSE UNCHANGED Chain!vars
-                 /\ UNCHANGED <<DAG,buffer>>
+NextRoundTn(p) ==  /\ round[p]+1 \in RoundSet
+                   /\ Cardinality(AddedVertices(p,round[p])) > 2*NumFaultyProcessors
+                   /\ blocksToPropose[p] # <<>>
+                   /\ Broadcast(p, round[p]+1, CreateVertex(p,round[p]+1))
+                   /\ round' = [round EXCEPT ![p] = round[p]+1]
+                   /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
+                   /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED Chain!vars
+                   /\ UNCHANGED <<dag,buffer>>
 
-propose(p,b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
-                /\ UNCHANGED Chain!vars
-                /\ UNCHANGED <<DAGround, bcastNetwork, bcastRecord, buffer, DAG>>
+ProposeTn(p,b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
+                  /\ UNCHANGED Chain!vars
+                  /\ UNCHANGED <<round, broadcastNetwork, broadcastRecord, buffer, dag>>
                 
-recieve_vertex(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in bcastNetwork[p]
-                              /\ v.source = q 
-                              /\ v.round = r
-                              /\ Cardinality(v.edges) > 2*NumFaultyProcessors
-                              /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
-                              /\ bcastNetwork' = [bcastNetwork EXCEPT ![p] = bcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
-                              /\ UNCHANGED Chain!vars
-                              /\ UNCHANGED <<blocksToPropose, DAGround, bcastRecord, DAG>>
+ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in broadcastNetwork[p]
+                               /\ v.source = q 
+                               /\ v.round = r
+                               /\ Cardinality(v.edges) > 2*NumFaultyProcessors
+                               /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
+                               /\ broadcastNetwork' = [broadcastNetwork EXCEPT ![p] = broadcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
+                               /\ UNCHANGED Chain!vars
+                               /\ UNCHANGED <<blocksToPropose, round, broadcastRecord, dag>>
 
-add_vertex(p,v) == /\ v \in buffer[p]
-                   /\ v.round <= DAGround[p]
-                   /\ DAG[p][v.round][v.source] = nil_vertex(v.source, v.round)
-                   /\ v.edges \in added_vertices(p, v.round -1)
-                   /\ DAG'= [DAG EXCEPT ![p][v.round][v.source] = v]
-                   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN Chain!update_waveDAG(p,(v.round \div 4)+1, waves_with_paths(p,v)) ELSE UNCHANGED Chain!vars
-                   /\ UNCHANGED <<blocksToPropose, DAGround, bcastNetwork, bcastRecord, buffer>>
+AddVertexTn(p,v) == /\ v \in buffer[p]
+                    /\ v.round <= round[p]
+                    /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
+                    /\ v.edges \in AddedVertices(p, v.round -1)
+                    /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
+                    /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN Chain!UpdateWaveTn(p,(v.round \div 4)+1, ConnectedWaves(p,v)) ELSE UNCHANGED Chain!vars
+                    /\ UNCHANGED <<blocksToPropose, round, broadcastNetwork, broadcastRecord, buffer>>
 
 ----------------------------------------------------------------------------
 
-Next == \E p \in ProcessorSet, r \in RoundSet, v \in Vertices, b \in BlockSet: \E q \in ProcessorSet\{p} : \/ propose(p,b)
-                                                                                       \/ next_round(p)
-                                                                                       \/ recieve_vertex(p, q, r, v)
-                                                                                       \/ add_vertex(p,v)
+Next == \E p \in ProcessorSet, r \in RoundSet, v \in VertexSet, b \in BlockSet: \E q \in ProcessorSet\{p} : \/ ProposeTn(p,b)
+                                                                                                            \/ NextRoundTn(p)
+                                                                                                            \/ ReceiveVertexTn(p, q, r, v)
+                                                                                                            \/ AddVertexTn(p,v)
 
 ----------------------------------------------------------------------------
                                                                                        
-vars == <<blocksToPropose, DAGround, bcastNetwork, bcastRecord, buffer, DAG, waveDAG, decidedRefWave, leaderSeq, commitWithRef>>
+vars == <<blocksToPropose, round, broadcastNetwork, broadcastRecord, buffer, dag, leaderReachablity, decidedWave, leaderSeq, commitWithRef>>
 
 Spec == Init /\ [][Next]_vars
 
 ----------------------------------------------------------------------------
 
-DAGConsistency == \A p,q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: r # 0 /\ DAG[p][r][o] \in Vertices /\ DAG[q][r][o] \in Vertices => DAG[p][r][o] = DAG[q][r][o]
-ChainConsistancy == \A p,q \in ProcessorSet : decidedRefWave[p] <= decidedRefWave[q] => Chain!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+DagConsistency == \A p,q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: r # 0 /\ dag[p][r][o] \in VertexSet /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
+ChainConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => Chain!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 ChainMonotonicity == \A p \in ProcessorSet : Chain!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
 ----------------------------------------------------------------------------
 
-Invariant1 == \A p,q \in ProcessorSet, r \in RoundSet : r # 0 /\ DAG[p][r][q] \in Vertices => DAG[p][r][q] \in buffer[p] 
-Invariant2 == \A m \in bcastNetwork["History"]: bcastRecord[m.sender][m.inRound] = TRUE 
-Invariant3 == \A p \in ProcessorSet: \A m \in bcastNetwork[p]: m \in bcastNetwork["History"] 
-Invariant6 == \A p,q \in ProcessorSet, r \in RoundSet: DAG[p][r][q].source = q /\ DAG[p][r][q].round = r
-Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in bcastNetwork["History"]
-Invariant5 == \A m,o \in bcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
+Invariant1 == \A p,q \in ProcessorSet, r \in RoundSet : r # 0 /\ dag[p][r][q] \in VertexSet => dag[p][r][q] \in buffer[p] 
+Invariant2 == \A m \in broadcastNetwork["History"]: broadcastRecord[m.sender][m.inRound] = TRUE 
+Invariant3 == \A p \in ProcessorSet: \A m \in broadcastNetwork[p]: m \in broadcastNetwork["History"] 
+Invariant6 == \A p,q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q /\ dag[p][r][q].round = r
+Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
+Invariant5 == \A m,o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
 
-----------------------------------------------------------------------------
 
 =============================================================================
 \* Modification History
-\* Last modified Mon Jan 15 14:16:13 AEDT 2024 by Pranav
+\* Last modified Tue Jan 30 19:17:12 AEDT 2024 by Pranav
 \* Created Mon Jan 15 13:06:34 AEDT 2024 by Pranav
