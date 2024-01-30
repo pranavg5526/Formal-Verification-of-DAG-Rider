@@ -1,10 +1,10 @@
 ------------------------ MODULE LeaderConsensus_Spec ------------------------
 
-EXTENDS Integers, 
-        TLAPS, 
-        TLC, 
-        Sequences, 
-        FiniteSets, 
+EXTENDS Integers,
+        TLAPS,
+        TLC,
+        Sequences,
+        FiniteSets,
         SequenceOps
 
 ----------------------------------------------------------------------------
@@ -25,9 +25,9 @@ WaveSet == 1..NumWaves
 
 ----------------------------------------------------------------------------
 
-VARIABLES leaderReachablity, 
-          decidedWave, 
-          leaderSeq, 
+VARIABLES leaderReachablity,
+          decidedWave,
+          leaderSeq,
           commitWithRef
 
 StateType == 
@@ -106,7 +106,7 @@ Invariant10 == \A p,q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].
 
 =============================================================================
 \* Modification History
-\* Last modified Wed Jan 31 09:22:12 AEDT 2024 by scholz
+\* Last modified Wed Jan 31 09:42:32 AEDT 2024 by scholz
 \* Last modified Wed Jan 31 09:08:06 AEDT 2024 by scholz
 \* Last modified Tue Jan 30 19:17:26 AEDT 2024 by Pranav
 \* Created Mon Jan 15 13:08:30 AEDT 2024 by Pranav
