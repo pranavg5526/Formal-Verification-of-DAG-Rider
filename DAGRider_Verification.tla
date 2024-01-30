@@ -461,8 +461,8 @@ LEMMA SpecCorrectnessLem == Spec => Chain!Spec
       <2> QED BY <1>2,<2>1,<2>2,<2>3,<2>4,<2>5 DEF Next 
  <1> QED BY <1>1,<1>2,PTL, TypeCorrectnessLem DEF Spec, Chain!Spec   
 
-THEOREM SystemTypeCorrectnessLem == Spec => []StateType_System
-  BY TypeCorrectnessLem, PTL, Chain!TypeCorrectnessLem, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm DEF StateType_System
+THEOREM SystemTypeCorrectnessLem == Spec => []ComposedStateType
+  BY TypeCorrectnessLem, PTL, Chain!TypeCorrectnessLem, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm DEF ComposedStateType
 
 THEOREM ChainConsistancyCorrectnessThm == Spec=> []ChainConsistancy  
   BY Chain!ChainConsistancyCorrectnessThm, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF Chain!ChainConsistancy, ChainConsistancy
