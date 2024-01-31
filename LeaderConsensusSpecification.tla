@@ -1,11 +1,11 @@
 -------------------- MODULE LeaderConsensusSpecification --------------------
 
-EXTENDS Integers,
-        TLAPS,
-        TLC,
+EXTENDS FiniteSets,
+        Integers,
         Sequences,
-        FiniteSets,
-        SequenceOps
+        SequenceOps,
+        TLAPS,
+        TLC
 
 ----------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ Spec == Init /\ [][Next]_vars
 
 LeaderConsensusMonotonicity == \A p \in ProcessorSet : IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
-LeaderConsensusConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+LeaderConsensusConsistancy == \A p, q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
 Contains(w, S) == \E i \in 1..Len(S) : S[i] = w
 
@@ -90,9 +90,9 @@ Invariant2 == \A p \in ProcessorSet : leaderSeq[p].current = IF decidedWave[p] =
 
 Invariant3 == \A p \in ProcessorSet, w \in WaveSet: \A x \in leaderReachablity[p][w].edges : leaderReachablity[p][x].exists = TRUE
 
-Invariant4 == \A p \in ProcessorSet, w,x \in WaveSet : Contains(w, commitWithRef[p][x]) => leaderReachablity[p][w].exists = TRUE
+Invariant4 == \A p \in ProcessorSet, w, x \in WaveSet : Contains(w, commitWithRef[p][x]) => leaderReachablity[p][w].exists = TRUE
 
-Invariant5 == \A p \in ProcessorSet, w,x \in WaveSet : Contains(w, commitWithRef[p][x]) => IsPrefix(commitWithRef[p][w], commitWithRef[p][x])
+Invariant5 == \A p \in ProcessorSet, w, x \in WaveSet : Contains(w, commitWithRef[p][x]) => IsPrefix(commitWithRef[p][w], commitWithRef[p][x])
 
 Invariant6 == \A p \in ProcessorSet, w \in WaveSet: leaderReachablity[p][w].exists = TRUE => commitWithRef[p][w] = IF leaderReachablity[p][w].edges = {} THEN <<w>> ELSE Append(commitWithRef[p][max(leaderReachablity[p][w].edges)], w) 
 
@@ -100,9 +100,9 @@ Invariant7 == \A p, q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].
 
 Invariant8 == \A p \in ProcessorSet, w \in WaveSet : (\A y \in WaveSet : y > w /\ leaderReachablity[p][y].exists => w \in leaderReachablity[p][y].edges) => (\A y \in WaveSet : y >= w /\ leaderReachablity[p][y].exists => Contains(w, commitWithRef[p][y])) 
 
-Invariant9 == \A p,q \in ProcessorSet, w \in WaveSet : decidedWave[p] # 0 /\ w >= decidedWave[p] /\ leaderReachablity[q][w].exists = TRUE => Contains(decidedWave[p], commitWithRef[q][w])
+Invariant9 == \A p, q \in ProcessorSet, w \in WaveSet : decidedWave[p] # 0 /\ w >= decidedWave[p] /\ leaderReachablity[q][w].exists = TRUE => Contains(decidedWave[p], commitWithRef[q][w])
 
-Invariant10 == \A p,q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].exists = TRUE /\ w >= decidedWave[q] /\ decidedWave[q] # 0 => IsPrefix(commitWithRef[q][decidedWave[q]], commitWithRef[p][w]) 
+Invariant10 == \A p, q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].exists = TRUE /\ w >= decidedWave[q] /\ decidedWave[q] # 0 => IsPrefix(commitWithRef[q][decidedWave[q]], commitWithRef[p][w]) 
 
 =============================================================================
 \* Modification History

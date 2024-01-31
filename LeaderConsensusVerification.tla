@@ -1,13 +1,12 @@
 -------------------- MODULE LeaderConsensusVerification --------------------
 
-EXTENDS Integers, 
-        TLAPS, 
-        TLC, 
-        Sequences, 
+EXTENDS FiniteSets, 
+        Integers, 
         LeaderConsensusSpecification, 
-        FiniteSets, 
-        SequenceOpTheorems
-        
+        SequenceOpTheorems,
+        Sequences, 
+        TLAPS, 
+        TLC 
         
 ---------------------------------------------------------------------------
 
@@ -23,22 +22,22 @@ LEMMA SelfIsPrefixLem == \A S \in Seq(WaveSet) : IsPrefix(S, S) = TRUE
            OBVIOUS
       <1> QED BY IsPrefixConcat, <1>1
       
-LEMMA TransitiveIsPrefixLem == ASSUME NEW S \in Seq(WaveSet), NEW L \in Seq(WaveSet), NEW M \in Seq(WaveSet), IsPrefix(S,L), IsPrefix(L,M)
-                            PROVE IsPrefix(S,M)
-      <1>1 \E u,w \in Seq(WaveSet) : L = S \o u /\ M = L \o w
+LEMMA TransitiveIsPrefixLem == ASSUME NEW S \in Seq(WaveSet), NEW L \in Seq(WaveSet), NEW M \in Seq(WaveSet), IsPrefix(S, L), IsPrefix(L, M)
+                            PROVE IsPrefix(S, M)
+      <1>1 \E u, w \in Seq(WaveSet) : L = S \o u /\ M = L \o w
            BY IsPrefixProperties
-      <1>2 \A n,m, u \in Seq(WaveSet) : (n \o m) \o u = n \o (m \o u)
+      <1>2 \A n, m, u \in Seq(WaveSet) : (n \o m) \o u = n \o (m \o u)
            OBVIOUS
-      <1>3  \E u,w \in Seq(WaveSet) : M = S \o (u \o w)
+      <1>3  \E u, w \in Seq(WaveSet) : M = S \o (u \o w)
            BY <1>1
-      <1>4 \A u,w \in Seq(WaveSet) : u \o w \in Seq(WaveSet) 
+      <1>4 \A u, w \in Seq(WaveSet) : u \o w \in Seq(WaveSet) 
            OBVIOUS
-      <1>5 \A u,w \in Seq(WaveSet) : M = S \o (u \o w) /\ u \o w \in Seq(WaveSet) => IsPrefix(S,M)
+      <1>5 \A u, w \in Seq(WaveSet) : M = S \o (u \o w) /\ u \o w \in Seq(WaveSet) => IsPrefix(S, M)
            BY IsPrefixConcat
       <1> QED BY <1>5, <1>4, <1>3
 
-LEMMA AppendIsPrefixLem == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Append(S,w))
-      <1>1 \A S \in Seq(WaveSet), w \in WaveSet : <<w>> \in Seq(WaveSet) /\ Append(S,w) = S \o <<w>>
+LEMMA AppendIsPrefixLem == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Append(S, w))
+      <1>1 \A S \in Seq(WaveSet), w \in WaveSet : <<w>> \in Seq(WaveSet) /\ Append(S, w) = S \o <<w>>
            OBVIOUS
       <1> QED BY <1>1, IsPrefixConcat
      
@@ -58,7 +57,7 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
                 <4>1 <<w>> \in Seq(WaveSet)
                      BY <2>1 
                 <4>2 E # {} =>max(E) \in WaveSet
-                     BY MaxInPlt,<2>1
+                     BY MaxInPlt, <2>1
                 <4>3 E # {} => Append(commitWithRef[p][max(E)], w) \in Seq(WaveSet)
                      <5>1 E # {} => commitWithRef[p][max(E)] \in Seq(WaveSet)
                           BY <2>1, <4>2, <1>2 DEF StateType
@@ -463,7 +462,7 @@ LEMMA Invariant8CorrectnessLem == Spec => []Invariant8
                                BY  <2>1, <4>1 DEF Invariant6
                           <6>2 leaderReachablity'[q][z].edges # {} => Contains(z, commitWithRef'[q][z]) 
                                BY <6>1 DEF Contains
-                          <6> QED BY <5>1 ,<6>1, <6>2 DEF Contains
+                          <6> QED BY <5>1, <6>1, <6>2 DEF Contains
                      <5>2 CASE x # z
                           <6>1 z > x
                                BY <5>2, <4>1
@@ -519,7 +518,7 @@ LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
                           BY <4>1, <3>1, <2>1 DEF StateType, UpdateWaveTn
                      <5>2 CASE x # w
                           <6>1 commitWithRef'[r][x] = commitWithRef[r][x] /\ leaderReachablity'[r][x].exists = leaderReachablity[r][x].exists
-                               BY <5>2, <4>1, <3>1, <2>1 DEF StateType,UpdateWaveTn
+                               BY <5>2, <4>1, <3>1, <2>1 DEF StateType, UpdateWaveTn
                           <6> QED BY <6>1, <5>1, <4>1, <2>1 DEF Invariant9
                      <5>3 CASE x = w
                           <6>1 CASE r = p
@@ -533,7 +532,7 @@ LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
                                     <8>1 decidedWave'[q] \in E /\ E # {}
                                          <9>1 decidedWave'[q] < x
                                               BY <7>3, <4>1
-                                         <9> QED BY <9>1,<5>3,<4>1,<3>1 DEF UpdateWaveTn
+                                         <9> QED BY <9>1, <5>3, <4>1, <3>1 DEF UpdateWaveTn
                                     <8>2 Contains(decidedWave'[q], commitWithRef[r][max(E)])
                                          <9>1 max(E) \in E
                                               BY <8>1, <3>1, MaxInPlt
@@ -588,7 +587,7 @@ LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
                                          <9>1 CASE leaderReachablity[r][x].edges # {}
                                              BY <9>1, <6>2 DEF Contains
                                          <9>2 CASE leaderReachablity[r][x].edges = {} 
-                                             BY <9>2,<6>2 DEF Contains
+                                             BY <9>2, <6>2 DEF Contains
                                          <9> QED BY <9>1, <9>2
                                    <8> QED BY <8>1, <7>1, <6>1, <5>1
                               <7>2 CASE x # w
@@ -602,10 +601,10 @@ LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
                                         <9>1 max(leaderReachablity[r][x].edges) \in leaderReachablity[r][x].edges
                                              BY <8>1, <4>1, MaxInPlt, <8>2
                                         <9>2 w =< max(leaderReachablity[r][x].edges)
-                                             BY <8>1, MaxPropertyPlt,<3>1,<8>2 DEF max
+                                             BY <8>1, MaxPropertyPlt, <3>1, <8>2 DEF max
                                         <9>3 leaderReachablity[r][max(leaderReachablity[r][x].edges)].exists = TRUE
                                              BY <4>1, <2>1, <9>1 DEF Invariant3
-                                        <9>4 \A z \in WaveSet : z >= w /\ leaderReachablity[r][z].exists = TRUE => Contains(w,commitWithRef[r][z])
+                                        <9>4 \A z \in WaveSet : z >= w /\ leaderReachablity[r][z].exists = TRUE => Contains(w, commitWithRef[r][z])
                                              BY <4>1, <3>2, <2>1 DEF Invariant8, UpdateDecidedWaveTn
                                         <9> QED BY <9>1, <9>2, <9>3, <9>4, <8>2
                                    <8>4 Contains(w, commitWithRef[r][max(leaderReachablity[r][x].edges)])  => Contains(w, Append(commitWithRef[r][max(leaderReachablity[r][x].edges)], x))
@@ -675,7 +674,7 @@ THEOREM LeaderConsensusConsistancyCorrectnessThm == Spec => []LeaderConsensusCon
                      <5>3 leaderReachablity'[q][decidedWave'[q]].exists = TRUE
                           BY <2>1, <3>1, <4>3 DEF Invariant1
                      <5> QED BY <5>1, <5>2, <5>3, <2>1, <3>1, <4>3 DEF Invariant10
-                <4> QED BY <3>1, <4>1,<4>2, <4>3, <2>1 DEF StateType, WaveSet
+                <4> QED BY <3>1, <4>1, <4>2, <4>3, <2>1 DEF StateType, WaveSet
            <3> QED BY <3>1 DEF LeaderConsensusConsistancy
       <2> QED BY <2>1
  <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant10CorrectnessLem, Invariant1CorrectnessLem, Invariant2CorrectnessLem, PTL DEF Spec
