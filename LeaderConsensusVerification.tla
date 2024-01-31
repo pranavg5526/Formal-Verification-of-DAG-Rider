@@ -14,7 +14,6 @@ LEMMA MaxInPlt == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E
       
 LEMMA MaxPropertyPlt == \A E \in SUBSET(WaveSet) : \A x \in E: E # {} => x<=max(E)
 
-
 ---------------------------------------------------------------------------
 
 LEMMA SelfIsPrefixLem == \A S \in Seq(WaveSet) : IsPrefix(S, S) = TRUE
@@ -723,6 +722,5 @@ THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMo
            BY <2>2 DEF vars, LeaderConsensusMonotonicity
       <2> QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant10CorrectnessLem, Invariant1CorrectnessLem, Invariant2CorrectnessLem, PTL DEF Spec
-
 
 =============================================================================
