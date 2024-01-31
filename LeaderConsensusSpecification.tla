@@ -30,7 +30,7 @@ WaveSet == 1..NumWaves
 
 VARIABLES commitWithRef
 
-CommitWithRefType = commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
+CommitWithRefType == commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
 
 ------------------------------
 
@@ -38,7 +38,7 @@ CommitWithRefType = commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]
 
 VARIABLES decidedWave
 
-DecidedWaveType = decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
+DecidedWaveType == decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
 
 ------------------------------
 
@@ -49,7 +49,7 @@ DecidedWaveType = decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
 
 VARIABLES leaderReachablity
 
-LeaderReachabilityType = leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
+LeaderReachabilityType == leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
 
 ------------------------------
 
@@ -59,14 +59,14 @@ LeaderReachabilityType = leaderReachablity \in [ProcessorSet -> [WaveSet -> [exi
 
 VARIABLES leaderSeq
 
-LeaderSeqType = leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
+LeaderSeqType == leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
 
 ------------------------------
 
 StateType == 
           /\ CommitWithRefType
           /\ DecidedWaveType
-          /\ LeaderReachablityType
+          /\ LeaderReachabilityType
           /\ LeaderSeqType
 
 ----------------------------------------------------------------------------

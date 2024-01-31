@@ -67,7 +67,7 @@ NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 VARIABLE blocksToPropose
 
-BlocksToProposeType = blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
+BlocksToProposeType == blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
 
 ------------------------------
 
@@ -79,7 +79,7 @@ BlocksToProposeType = blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
 
 VARIABLE broadcastNetwork
 
-BroadcastNetworkType = broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
+BroadcastNetworkType == broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
 
 ------------------------------
 
@@ -89,7 +89,7 @@ BroadcastNetworkType = broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUB
 
 VARIABLE broadcastRecord
 
-BroadcastRecordType = broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+BroadcastRecordType == broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
 
 ------------------------------
 
@@ -98,7 +98,7 @@ BroadcastRecordType = broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]
 
 VARIABLE buffer
 
-BufferType = buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+BufferType == buffer \in [ProcessorSet -> SUBSET(VertexSet)]
 
 ------------------------------
 
@@ -109,7 +109,7 @@ BufferType = buffer \in [ProcessorSet -> SUBSET(VertexSet)]
 
 VARIABLE dag
 
-DagType = dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+DagType == dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
 
 ------------------------------
 
@@ -118,7 +118,7 @@ DagType = dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup
 
 VARIABLE round
 
-RountType = round \in [ProcessorSet -> RoundSet]
+RoundType == round \in [ProcessorSet -> RoundSet]
 
 ------------------------------
 
@@ -132,6 +132,7 @@ VARIABLE commitWithRef,
          decidedWave,
          leaderReachablity,
          leaderSeq
+----------------------------------------------------------------------------
 
 LeaderConsensus  == INSTANCE LeaderConsensusVerification 
                     WITH NumWaves <- NumWaves,
@@ -150,7 +151,6 @@ StateType ==
           /\ BufferType
           /\ DagType
           /\ RoundType
-
 
 ComposedStateType == StateType /\ LeaderConsensus!StateType
 
