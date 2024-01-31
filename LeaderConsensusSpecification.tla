@@ -1,4 +1,4 @@
------------------------- MODULE LeaderConsensus_Spec ------------------------
+-------------------- MODULE LeaderConsensusSpecification --------------------
 
 EXTENDS Integers,
         TLAPS,
@@ -76,9 +76,9 @@ Spec == Init /\ [][Next]_vars
 
 ----------------------------------------------------------------------------
 
-ChainMonotonicity == \A p \in ProcessorSet : IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
+LeaderConsensusMonotonicity == \A p \in ProcessorSet : IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
-ChainConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+LeaderConsensusConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
 Contains(w, S) == \E i \in 1..Len(S) : S[i] = w
 
@@ -106,8 +106,6 @@ Invariant10 == \A p,q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].
 
 =============================================================================
 \* Modification History
-\* Last modified Wed Jan 31 09:42:32 AEDT 2024 by scholz
-\* Last modified Wed Jan 31 09:08:06 AEDT 2024 by scholz
-\* Last modified Tue Jan 30 19:17:26 AEDT 2024 by Pranav
-\* Created Mon Jan 15 13:08:30 AEDT 2024 by Pranav
+\* Last modified Wed Jan 31 13:13:41 AEDT 2024 by Pranav
+\* Created Wed Jan 31 13:12:37 AEDT 2024 by Pranav
 
