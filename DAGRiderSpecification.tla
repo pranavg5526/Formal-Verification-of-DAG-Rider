@@ -60,16 +60,69 @@ NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 
-VARIABLE blocksToPropose, \* For every process p, blocksToPropose stores sequence of blocks that are proposed but not yet initialiseed to order (whose vertex is not yet created by the process).
-         broadcastNetwork, \* For every process p, broadcastNetwork stores set of TaggedVertices that are broadcasted but not yet received by p. Addtionally it also stores history of all the TaggedVertices ever broadcasted on the network.
-         broadcastRecord, \* For every process p and round r, broadcastRecord stores weather or not process p broadcasted a vertex in round r.
-         buffer, \* For every process p, buffer stores set of vertices recieved by p via the broadcast.
-         commitWithRef, \* commitWithRef maps to corrosponding commitWithRef variable from LeaderConsensusSpecification.
-         dag, \* For every process p, round r, process q, dag stores vertex in the DAG of process p created by process q in round r, if such a vertex does not exists in the DAG then it stores NilVertex(q, r).
-         decidedWave, \* decidedWave maps to corrosponding decidedWave variable from LeaderConsensusSpecification.
-         leaderReachablity, \* leaderReachablity maps to corrosponding leaderReachablity variable from LeaderConsensusSpecification.
-         leaderSeq, \* leaderSeq maps to corrosponding leaderSeq variable from LeaderConsensusSpecification.
-         round \* For every process p, round stores the round of DAG construction for process p.
+(* blocksToPropose: For every process p, blocksToPropose stores sequence
+                    of blocks that are proposed but not yet initialiseed
+                    to order (blocks whose vertex is not yet created by
+                    the process).                                         *)
+
+VARIABLE blocksToPropose
+
+------------------------------
+
+(* broadcastNetwork: For every process p, broadcastNetwork stores set 
+                     of TaggedVertices that are broadcasted but not 
+                     yet received by p. Addtionally it also stores
+                     history of all the TaggedVertices ever broadcas-
+                     -ted on the network.                                 *)
+
+VARIABLE broadcastNetwork
+
+------------------------------
+
+(* broadcastRecord: For every process p and round r, broadcastRecord
+                    stores weather or not process p broadcasted a
+                    vertex in round r.                                    *)
+
+VARIABLE broadcastRecord
+
+------------------------------
+
+(* buffer: For every process p, buffer stores set of vertices recieved
+           by p via the broadcast.                                        *)
+
+VARIABLE buffer
+
+------------------------------
+
+(* dag: For every process p, round r, process q, dag stores vertex in
+        the DAG of process p created by process q in round r, if such
+        a vertex does not exists in the DAG then it stores
+        NilVertex(q, r).                                                  *)
+    
+VARIABLE dag
+
+------------------------------
+
+(* round: For every process p, round stores the round of DAG constru-
+          -ction for process p.                                           *)
+
+VARIABLE round
+
+------------------------------
+
+(* Since DAGRiderSpecification extends LeaderConsensusSpecification, we
+   additionally have the four variables (commitWithRef, decidedWave,
+   leaderReachablity, leaderSeq) from the LeaderConsensusSpecification.    *)
+
+VARIABLE commitWithRef
+
+VARIABLE decidedWave
+
+VARIABLE leaderReachablity
+
+VARIABLE leaderSeq
+
+------------------------------
 
 StateType ==
           /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
