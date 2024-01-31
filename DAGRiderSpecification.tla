@@ -61,43 +61,43 @@ NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 ----------------------------------------------------------------------------
 
 VARIABLE blocksToPropose,
-         round,
-         dag,
          broadcastNetwork,
          broadcastRecord,
          buffer,
-         leaderReachablity,
+         commitWithRef,
+         dag,
          decidedWave,
+         leaderReachablity,
          leaderSeq,
-         commitWithRef
+         round
 
 StateType ==
           /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
-          /\ round \in [ProcessorSet -> RoundSet]
           /\ broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
           /\ broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
           /\ buffer \in [ProcessorSet -> SUBSET(VertexSet)]
           /\ dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+          /\ round \in [ProcessorSet -> RoundSet]
 
 ----------------------------------------------------------------------------
 
 LeaderConsensus  == INSTANCE LeaderConsensusVerification WITH NumWaves <- NumWaves,
                                                      NumProcessors <- NumProcessors,
-                                                     leaderReachablity <- leaderReachablity,
+                                                     commitWithRef <- commitWithRef,
                                                      decidedWave <- decidedWave,
-                                                     leaderSeq <- leaderSeq,
-                                                     commitWithRef <- commitWithRef
+                                                     leaderReachablity <- leaderReachablity,
+                                                     leaderSeq <- leaderSeq
 
 ComposedStateType == StateType /\ LeaderConsensus!StateType
 
 ----------------------------------------------------------------------------
 
 Init == /\ blocksToPropose = [p \in ProcessorSet |-> <<>> ]
-        /\ round = [p \in ProcessorSet |-> 0]
         /\ broadcastNetwork = [p \in ProcessorSet \cup {"History"} |-> {}]
         /\ broadcastRecord  = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
         /\ buffer = [p \in ProcessorSet |-> {}]
         /\ dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)]]]
+        /\ round = [p \in ProcessorSet |-> 0]
         /\ LeaderConsensus!Init
 
 ----------------------------------------------------------------------------
@@ -139,11 +139,11 @@ NextRoundTn(p) ==  /\ round[p]+1 \in RoundSet
                    /\ round' = [round EXCEPT ![p] = round[p]+1]
                    /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
                    /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED LeaderConsensus!vars
-                   /\ UNCHANGED <<dag, buffer>>
+                   /\ UNCHANGED <<buffer, dag>>
 
 ProposeTn(p, b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
-                  /\ UNCHANGED LeaderConsensus!vars
-                  /\ UNCHANGED <<round, broadcastNetwork, broadcastRecord, buffer, dag>>
+                   /\ UNCHANGED LeaderConsensus!vars
+                   /\ UNCHANGED <<broadcastNetwork, broadcastRecord, buffer, dag, round>>
 
 ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in broadcastNetwork[p]
                                /\ v.source = q
@@ -152,15 +152,15 @@ ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \i
                                /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
                                /\ broadcastNetwork' = [broadcastNetwork EXCEPT ![p] = broadcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
                                /\ UNCHANGED LeaderConsensus!vars
-                               /\ UNCHANGED <<blocksToPropose, round, broadcastRecord, dag>>
+                               /\ UNCHANGED <<blocksToPropose, broadcastRecord, dag, round>>
 
 AddVertexTn(p, v) == /\ v \in buffer[p]
-                    /\ v.round <= round[p]
-                    /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
-                    /\ v.edges \in AddedVertices(p, v.round -1)
-                    /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
-                    /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ConnectedWaves(p, v)) ELSE UNCHANGED LeaderConsensus!vars
-                    /\ UNCHANGED <<blocksToPropose, round, broadcastNetwork, broadcastRecord, buffer>>
+                     /\ v.round <= round[p]
+                     /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
+                     /\ v.edges \in AddedVertices(p, v.round -1)
+                     /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
+                     /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ConnectedWaves(p, v)) ELSE UNCHANGED LeaderConsensus!vars
+                     /\ UNCHANGED <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, round>>
 
 ----------------------------------------------------------------------------
 
@@ -171,7 +171,7 @@ Next == \E p \in ProcessorSet, r \in RoundSet, v \in VertexSet, b \in BlockSet: 
 
 ----------------------------------------------------------------------------
 
-vars == <<blocksToPropose, round, broadcastNetwork, broadcastRecord, buffer, dag, leaderReachablity, decidedWave, leaderSeq, commitWithRef>>
+vars == <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, commitWithRef, dag, decidedWave, leaderReachablity, leaderSeq, round>>
 
 Spec == Init /\ [][Next]_vars
 
@@ -199,7 +199,3 @@ Invariant5 == \A m, o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.
 
 
 =============================================================================
-\* Modification History
-\* Last modified Wed Jan 31 17:51:43 AEDT 2024 by scholz
-\* Last modified Wed Jan 31 13:16:29 AEDT 2024 by Pranav
-\* Created Wed Jan 31 13:12:03 AEDT 2024 by Pranav
