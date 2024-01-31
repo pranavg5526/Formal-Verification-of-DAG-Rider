@@ -1,6 +1,13 @@
 --------------------- MODULE DAGRider_Verification ---------------------
 
-EXTENDS Integers, TLAPS, TLC, Sequences, DAGRider_Spec , FiniteSets
+EXTENDS Integers, 
+        TLAPS, 
+        TLC, 
+        Sequences, 
+        FiniteSets,
+        DAGRider_Spec
+
+----------------------------------------------------------------------------
            
 LEMMA VertexSetDef == VertexSet' = VertexSet 
       
@@ -26,6 +33,8 @@ LEMMA divprop2 == ASSUME NEW n \in Nat, NEW x \in 0..4*n, x % 4 = 0, x>0
                   PROVE (x \div 4) \in 1..n
                   
 LEMMA 0isRound == 0 \in RoundSet
+
+----------------------------------------------------------------------------
                                                      
 LEMMA TypeCorrectnessLem == Spec => []StateType 
  <1>1 Init => StateType
@@ -389,6 +398,8 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
       <2> QED BY <1>2,<2>1,<2>2,<2>3,<2>4,<2>5 DEF Next 
  <1> QED BY <1>1,<1>2, TypeCorrectnessLem, PTL DEF Spec
 
+----------------------------------------------------------------------------
+
 LEMMA DagConsistencyCorrectnessThm == Spec => []DagConsistency
  <1>1 Init => DagConsistency
      BY DEF Init, DagConsistency
@@ -421,6 +432,8 @@ LEMMA DagConsistencyCorrectnessThm == Spec => []DagConsistency
 
 LEMMA UnchangedDefLem == WaveSet = Chain!WaveSet /\ ProcessorSet = Chain!ProcessorSet /\ NumWaveAsm = Chain!NumWaveAsm /\ NumProcessorAsm = Chain!NumProcessorAsm 
                       BY DEF  WaveSet, Chain!WaveSet, ProcessorSet, Chain!ProcessorSet, NumWaveAsm, Chain!NumWaveAsm,NumProcessorAsm, Chain!NumProcessorAsm 
+
+----------------------------------------------------------------------------
 
 LEMMA SpecCorrectnessLem == Spec => Chain!Spec   
  <1>1 Init => Chain!Init
@@ -461,15 +474,23 @@ LEMMA SpecCorrectnessLem == Spec => Chain!Spec
       <2> QED BY <1>2,<2>1,<2>2,<2>3,<2>4,<2>5 DEF Next 
  <1> QED BY <1>1,<1>2,PTL, TypeCorrectnessLem DEF Spec, Chain!Spec   
 
-THEOREM SystemTypeCorrectnessLem == Spec => []StateType_System
-  BY TypeCorrectnessLem, PTL, Chain!TypeCorrectnessLem, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm DEF StateType_System
+
+----------------------------------------------------------------------------
+
+THEOREM SystemTypeCorrectnessLem == Spec => []ComposedStateType
+  BY TypeCorrectnessLem, PTL, Chain!TypeCorrectnessLem, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm DEF ComposedStateType
+
+----------------------------------------------------------------------------
 
 THEOREM ChainConsistancyCorrectnessThm == Spec=> []ChainConsistancy  
   BY Chain!ChainConsistancyCorrectnessThm, SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF Chain!ChainConsistancy, ChainConsistancy
+
 THEOREM ChainMonotonicityCorrectnessThm == Spec => []ChainMonotonicity
   BY Chain!ChainMonotonicityCorrectnessThm,SpecCorrectnessLem,NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF Chain!ChainMonotonicity, ChainMonotonicity
   
 =============================================================================
 \* Modification History
+\* Last modified Wed Jan 31 09:56:04 AEDT 2024 by scholz
+\* Last modified Wed Jan 31 09:54:40 AEDT 2024 by scholz
 \* Last modified Tue Jan 30 19:12:08 AEDT 2024 by Pranav
 \* Created Mon Jan 15 13:07:49 AEDT 2024 by Pranav

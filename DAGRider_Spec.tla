@@ -1,56 +1,75 @@
 ------------------------- MODULE DAGRider_Spec -------------------------
-EXTENDS Sequences, FiniteSets, Integers, TLAPS, TLC
 
-CONSTANT NumProcessors
-ASSUME NumProcessorAsm == NumProcessors \in Nat\{0}
-
-CONSTANT NumWaves 
-ASSUME NumWaveAsm == NumWaves \in Nat\{0}
-
-CONSTANT BlockSet
-CONSTANT ChooseLeader(_) 
+EXTENDS Sequences, 
+        FiniteSets, 
+        Integers, 
+        TLAPS, 
+        TLC
 
 ----------------------------------------------------------------------------
 
+CONSTANT NumProcessors
+
+ASSUME NumProcessorAsm == NumProcessors \in Nat\{0}
+
 NumFaultyProcessors == (NumProcessors-1) \div 3 
 
-RoundSet == 0..(4*NumWaves)
+ProcessorSet == 1..NumProcessors
+
+----------------------------------------------------------------------------
+
+ASSUME ProcSetAsm == "History" \notin ProcessorSet
+
+CONSTANT NumWaves 
+
+ASSUME NumWaveAsm == NumWaves \in Nat\{0}
 
 WaveSet == 1..NumWaves
 
-ProcessorSet == 1..NumProcessors
-ASSUME ProcSetAsm == "History" \notin ProcessorSet
+RoundSet == 0..(4*NumWaves)
 
-RECURSIVE InRoundVertex(_), UntilRoundVertex(_), VertexSet
+----------------------------------------------------------------------------
+
+CONSTANT BlockSet
 
 DummyVertex(p) == [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
+
 DummyVertexSet == {DummyVertex(p) : p \in ProcessorSet}
+
+RECURSIVE InRoundVertex(_)
 
 InRoundVertex(r) == IF r = 0 
                  THEN DummyVertexSet
                  ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(InRoundVertex(r-1))]
-               
+
+RECURSIVE UntilRoundVertex(_)
+
 UntilRoundVertex(r) == IF r = 0
                    THEN InRoundVertex(r)
                    ELSE InRoundVertex(r) \cup UntilRoundVertex(r-1)
                    
+RECURSIVE VertexSet
+
 VertexSet == UntilRoundVertex(4*NumWaves)
 
 TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
 
 NilVertex(p,r) == [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
+
 NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 
-VARIABLE blocksToPropose, round, dag, broadcastNetwork, broadcastRecord, buffer, leaderReachablity, decidedWave, leaderSeq, commitWithRef
-
-----------------------------------------------------------------------------
-
-Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, NumProcessors <- NumProcessors,  leaderReachablity <- leaderReachablity, decidedWave <- decidedWave, 
-                                                          leaderSeq <- leaderSeq, commitWithRef <- commitWithRef
-
-----------------------------------------------------------------------------
+VARIABLE blocksToPropose, 
+         round, 
+         dag, 
+         broadcastNetwork, 
+         broadcastRecord, 
+         buffer, 
+         leaderReachablity, 
+         decidedWave, 
+         leaderSeq, 
+         commitWithRef
 
 StateType == 
           /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
@@ -60,7 +79,16 @@ StateType ==
           /\ buffer \in [ProcessorSet -> SUBSET(VertexSet)]
           /\ dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
 
-StateType_System == StateType /\ Chain!StateType
+----------------------------------------------------------------------------
+
+Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, 
+                                                     NumProcessors <- NumProcessors,
+                                                     leaderReachablity <- leaderReachablity, 
+                                                     decidedWave <- decidedWave, 
+                                                     leaderSeq <- leaderSeq, 
+                                                     commitWithRef <- commitWithRef
+
+ComposedStateType == StateType /\ Chain!StateType
 
 ----------------------------------------------------------------------------
 
@@ -74,8 +102,9 @@ Init == /\ blocksToPropose = [p \in ProcessorSet |-> <<>> ]
 
 ----------------------------------------------------------------------------
 
-RECURSIVE Path(_,_)
+CONSTANT ChooseLeader(_) 
 
+RECURSIVE Path(_,_)
 Path(u,v) == IF u = v
                THEN TRUE
                ELSE IF u.round = 0
@@ -149,20 +178,28 @@ Spec == Init /\ [][Next]_vars
 ----------------------------------------------------------------------------
 
 DagConsistency == \A p,q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: r # 0 /\ dag[p][r][o] \in VertexSet /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
+
 ChainConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => Chain!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+
 ChainMonotonicity == \A p \in ProcessorSet : Chain!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
 ----------------------------------------------------------------------------
 
 Invariant1 == \A p,q \in ProcessorSet, r \in RoundSet : r # 0 /\ dag[p][r][q] \in VertexSet => dag[p][r][q] \in buffer[p] 
-Invariant2 == \A m \in broadcastNetwork["History"]: broadcastRecord[m.sender][m.inRound] = TRUE 
-Invariant3 == \A p \in ProcessorSet: \A m \in broadcastNetwork[p]: m \in broadcastNetwork["History"] 
-Invariant6 == \A p,q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q /\ dag[p][r][q].round = r
-Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
-Invariant5 == \A m,o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
 
+Invariant2 == \A m \in broadcastNetwork["History"]: broadcastRecord[m.sender][m.inRound] = TRUE 
+
+Invariant3 == \A p \in ProcessorSet: \A m \in broadcastNetwork[p]: m \in broadcastNetwork["History"] 
+
+Invariant6 == \A p,q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q /\ dag[p][r][q].round = r
+
+Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
+
+Invariant5 == \A m,o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
 
 =============================================================================
 \* Modification History
+\* Last modified Wed Jan 31 09:20:17 AEDT 2024 by scholz
+\* Last modified Wed Jan 31 08:06:19 AEDT 2024 by scholz
 \* Last modified Tue Jan 30 19:17:12 AEDT 2024 by Pranav
 \* Created Mon Jan 15 13:06:34 AEDT 2024 by Pranav

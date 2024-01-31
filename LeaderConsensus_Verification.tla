@@ -1,6 +1,15 @@
 -------------------- MODULE LeaderConsensus_Verification --------------------
-EXTENDS Integers, TLAPS, TLC, Sequences, LeaderConsensus_Spec, FiniteSets, SequenceOpTheorems
 
+EXTENDS Integers, 
+        TLAPS, 
+        TLC, 
+        Sequences, 
+        FiniteSets, 
+        SequenceOpTheorems,
+        LeaderConsensus_Spec
+
+----------------------------------------------------------------------------
+        
 LEMMA maxIn == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E 
       
 LEMMA maxProperty == \A E \in SUBSET(WaveSet) : \A x \in E: E # {} => x<=max(E)
@@ -28,8 +37,9 @@ LEMMA AppendIsPrefixLem == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Ap
       <1>1 \A S \in Seq(WaveSet), w \in WaveSet : <<w>> \in Seq(WaveSet) /\ Append(S,w) = S \o <<w>>
            OBVIOUS
       <1> QED BY <1>1, IsPrefixConcat
-     
-     
+
+----------------------------------------------------------------------------
+          
 LEMMA TypeCorrectnessLem == Spec => []StateType
  <1>1 Init => StateType
       BY DEF Init, StateType
@@ -63,6 +73,8 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
  <1>3 StateType /\ UNCHANGED vars => StateType'
       BY DEF vars, StateType
  <1> QED BY <1>1,<1>2,<1>3, PTL DEF Spec
+
+----------------------------------------------------------------------------
 
 LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
  <1>1 Init => Invariant1
@@ -630,6 +642,8 @@ LEMMA Invariant10CorrectnessLem == Spec => []Invariant10
       <2> QED BY <2>1     
  <1> QED BY <1>1,<1>2, PTL, TypeCorrectnessLem, Invariant1CorrectnessLem, Invariant4CorrectnessLem,Invariant7CorrectnessLem,Invariant5CorrectnessLem, Invariant9CorrectnessLem DEF Spec             
  
+----------------------------------------------------------------------------
+ 
 THEOREM ChainConsistancyCorrectnessThm == Spec => []ChainConsistancy
  <1>1 Init => ChainConsistancy
       BY SelfIsPrefixLem DEF Init, ChainConsistancy
@@ -658,6 +672,8 @@ THEOREM ChainConsistancyCorrectnessThm == Spec => []ChainConsistancy
            <3> QED BY <3>1 DEF ChainConsistancy
       <2> QED BY <2>1
  <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant10CorrectnessLem, Invariant1CorrectnessLem,Invariant2CorrectnessLem, PTL DEF Spec
+
+----------------------------------------------------------------------------
  
 THEOREM ChainMonotonicityCorrectnessThm == Spec => []ChainMonotonicity
  <1>1 Init => ChainMonotonicity
@@ -705,5 +721,7 @@ THEOREM ChainMonotonicityCorrectnessThm == Spec => []ChainMonotonicity
 
 =============================================================================
 \* Modification History
+\* Last modified Wed Jan 31 09:56:08 AEDT 2024 by scholz
+\* Last modified Wed Jan 31 09:15:04 AEDT 2024 by scholz
 \* Last modified Tue Jan 30 19:17:42 AEDT 2024 by Pranav
 \* Created Mon Jan 15 13:08:58 AEDT 2024 by Pranav
