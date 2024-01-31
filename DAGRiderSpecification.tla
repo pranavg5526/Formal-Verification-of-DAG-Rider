@@ -16,9 +16,9 @@ NumFaultyProcessors == (NumProcessors-1) \div 3
 
 ProcessorSet == 1..NumProcessors
 
-----------------------------------------------------------------------------
-
 ASSUME ProcSetAsm == "History" \notin ProcessorSet
+
+----------------------------------------------------------------------------
 
 CONSTANT NumWaves
 
@@ -200,5 +200,6 @@ Invariant5 == \A m, o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.
 
 =============================================================================
 \* Modification History
+\* Last modified Wed Jan 31 17:51:43 AEDT 2024 by scholz
 \* Last modified Wed Jan 31 13:16:29 AEDT 2024 by Pranav
 \* Created Wed Jan 31 13:12:03 AEDT 2024 by Pranav
