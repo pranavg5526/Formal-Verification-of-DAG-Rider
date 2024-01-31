@@ -25,10 +25,10 @@ WaveSet == 1..NumWaves
 
 ----------------------------------------------------------------------------
 
-VARIABLES commitWithRef,
-          decidedWave,
-          leaderReachablity,
-          leaderSeq
+VARIABLES commitWithRef, \* For every process p and wave w, commitWithRef stores the sequence of waves that w will commit if decided by process p.
+          decidedWave, \* For every process p, decidedWave stores the last decided wave by p.
+          leaderReachablity, \* For every process p and wave w leaderReachablity stores information about existence of leader vertex of w in the DAG of p, along with the set of waves whose leader vertices are reachable from leader vertex of w.
+          leaderSeq \* For every process p, leaderSeq stores the sequence of waves (in the increasing order) committed by the last and the previous last decided wave.
 
 StateType == 
           /\ commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
