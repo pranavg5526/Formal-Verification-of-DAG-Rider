@@ -496,7 +496,4 @@ THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMo
   BY LeaderConsensus!LeaderConsensusMonotonicityCorrectnessThm, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!LeaderConsensusMonotonicity, LeaderConsensusMonotonicity
 
 =============================================================================
-\* Modification History
-\* Last modified Wed Jan 31 13:34:19 AEDT 2024 by Pranav
-\* Created Wed Jan 31 13:11:13 AEDT 2024 by Pranav
 
