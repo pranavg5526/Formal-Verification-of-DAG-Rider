@@ -726,6 +726,3 @@ THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMo
 
 
 =============================================================================
-\* Modification History
-\* Last modified Wed Jan 31 13:41:19 AEDT 2024 by Pranav
-\* Created Wed Jan 31 13:12:55 AEDT 2024 by Pranav
