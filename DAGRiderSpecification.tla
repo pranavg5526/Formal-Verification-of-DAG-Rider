@@ -132,6 +132,7 @@ VARIABLE commitWithRef,
          decidedWave,
          leaderReachablity,
          leaderSeq
+
 ----------------------------------------------------------------------------
 
 LeaderConsensus  == INSTANCE LeaderConsensusVerification 
@@ -260,6 +261,5 @@ Invariant6 == \A p, q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q 
 Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
 
 Invariant5 == \A m, o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
-
 
 =============================================================================
