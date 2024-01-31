@@ -107,6 +107,3 @@ Invariant9 == \A p, q \in ProcessorSet, w \in WaveSet : decidedWave[p] # 0 /\ w 
 Invariant10 == \A p, q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].exists = TRUE /\ w >= decidedWave[q] /\ decidedWave[q] # 0 => IsPrefix(commitWithRef[q][decidedWave[q]], commitWithRef[p][w]) 
 
 =============================================================================
-\* Modification History
-\* Last modified Wed Jan 31 16:41:49 AEDT 2024 by Pranav
-\* Created Wed Jan 31 13:12:37 AEDT 2024 by Pranav
