@@ -1,4 +1,4 @@
-------------------------- MODULE DAGRider_Spec -------------------------
+----------------------- MODULE DAGRiderSpecification -----------------------
 
 EXTENDS Sequences, 
         FiniteSets, 
@@ -81,14 +81,14 @@ StateType ==
 
 ----------------------------------------------------------------------------
 
-Chain  == INSTANCE LeaderConsensus_Verification WITH NumWaves <- NumWaves, 
+LeaderConsensus  == INSTANCE LeaderConsensusVerification WITH NumWaves <- NumWaves, 
                                                      NumProcessors <- NumProcessors,
                                                      leaderReachablity <- leaderReachablity, 
                                                      decidedWave <- decidedWave, 
                                                      leaderSeq <- leaderSeq, 
                                                      commitWithRef <- commitWithRef
 
-ComposedStateType == StateType /\ Chain!StateType
+ComposedStateType == StateType /\ LeaderConsensus!StateType
 
 ----------------------------------------------------------------------------
 
@@ -98,7 +98,7 @@ Init == /\ blocksToPropose = [p \in ProcessorSet |-> <<>> ]
         /\ broadcastRecord  = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
         /\ buffer = [p \in ProcessorSet |-> {}]
         /\ dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q,r)]]]
-        /\ Chain!Init
+        /\ LeaderConsensus!Init
 
 ----------------------------------------------------------------------------
 
@@ -127,8 +127,8 @@ Broadcast(p, r, v) == IF broadcastRecord[p][r] = FALSE
                       ELSE UNCHANGED <<broadcastNetwork, broadcastRecord>>
                   
 ReadyWave(p, w) == IF dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet /\ \E Q \in SUBSET(AddedVertices(p,4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : Path(u, WaveLeader(p, w))
-                   THEN Chain!UpdateDecidedWaveTn(p, w)
-                   ELSE UNCHANGED Chain!vars 
+                   THEN LeaderConsensus!UpdateDecidedWaveTn(p, w)
+                   ELSE UNCHANGED LeaderConsensus!vars 
 
 ----------------------------------------------------------------------------
 
@@ -138,11 +138,11 @@ NextRoundTn(p) ==  /\ round[p]+1 \in RoundSet
                    /\ Broadcast(p, round[p]+1, CreateVertex(p,round[p]+1))
                    /\ round' = [round EXCEPT ![p] = round[p]+1]
                    /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
-                   /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED Chain!vars
+                   /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED LeaderConsensus!vars
                    /\ UNCHANGED <<dag,buffer>>
 
 ProposeTn(p,b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
-                  /\ UNCHANGED Chain!vars
+                  /\ UNCHANGED LeaderConsensus!vars
                   /\ UNCHANGED <<round, broadcastNetwork, broadcastRecord, buffer, dag>>
                 
 ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in broadcastNetwork[p]
@@ -151,7 +151,7 @@ ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \i
                                /\ Cardinality(v.edges) > 2*NumFaultyProcessors
                                /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
                                /\ broadcastNetwork' = [broadcastNetwork EXCEPT ![p] = broadcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
-                               /\ UNCHANGED Chain!vars
+                               /\ UNCHANGED LeaderConsensus!vars
                                /\ UNCHANGED <<blocksToPropose, round, broadcastRecord, dag>>
 
 AddVertexTn(p,v) == /\ v \in buffer[p]
@@ -159,7 +159,7 @@ AddVertexTn(p,v) == /\ v \in buffer[p]
                     /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
                     /\ v.edges \in AddedVertices(p, v.round -1)
                     /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
-                    /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN Chain!UpdateWaveTn(p,(v.round \div 4)+1, ConnectedWaves(p,v)) ELSE UNCHANGED Chain!vars
+                    /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p,(v.round \div 4)+1, ConnectedWaves(p,v)) ELSE UNCHANGED LeaderConsensus!vars
                     /\ UNCHANGED <<blocksToPropose, round, broadcastNetwork, broadcastRecord, buffer>>
 
 ----------------------------------------------------------------------------
@@ -179,9 +179,9 @@ Spec == Init /\ [][Next]_vars
 
 DagConsistency == \A p,q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: r # 0 /\ dag[p][r][o] \in VertexSet /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
 
-ChainConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => Chain!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+LeaderConsensusConsistancy == \A p,q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => LeaderConsensus!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
-ChainMonotonicity == \A p \in ProcessorSet : Chain!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
+LeaderConsensusMonotonicity == \A p \in ProcessorSet : LeaderConsensus!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
 ----------------------------------------------------------------------------
 
@@ -197,9 +197,8 @@ Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source
 
 Invariant5 == \A m,o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
 
+
 =============================================================================
 \* Modification History
-\* Last modified Wed Jan 31 09:20:17 AEDT 2024 by scholz
-\* Last modified Wed Jan 31 08:06:19 AEDT 2024 by scholz
-\* Last modified Tue Jan 30 19:17:12 AEDT 2024 by Pranav
-\* Created Mon Jan 15 13:06:34 AEDT 2024 by Pranav
+\* Last modified Wed Jan 31 13:16:29 AEDT 2024 by Pranav
+\* Created Wed Jan 31 13:12:03 AEDT 2024 by Pranav
