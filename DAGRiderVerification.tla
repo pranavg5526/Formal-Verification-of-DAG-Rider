@@ -7,6 +7,20 @@ EXTENDS DAGRiderSpecification,
         TLAPS,
         TLC
 
+----------------------------------------------------------------------------
+
+Invariant1 == \A p, q \in ProcessorSet, r \in RoundSet : r # 0 /\ dag[p][r][q] \in VertexSet => dag[p][r][q] \in buffer[p]
+
+Invariant2 == \A m \in broadcastNetwork["History"]: broadcastRecord[m.sender][m.inRound] = TRUE
+
+Invariant3 == \A p \in ProcessorSet: \A m \in broadcastNetwork[p]: m \in broadcastNetwork["History"]
+
+Invariant6 == \A p, q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q /\ dag[p][r][q].round = r
+
+Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
+
+Invariant5 == \A m, o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
+
 -----------------------------------------------------------------------------
 
 LEMMA VertexSetDefPlt == VertexSet' = VertexSet
@@ -469,8 +483,8 @@ LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
            <3>1 CASE v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1)
                 <4>1 (v.round \div 4)+1 \in WaveSet
                      BY <3>1, VertexTypePlt, <2>4, NumWaveAsm, DivProperty1Plt DEF RoundSet, WaveSet
-                <4>2 ConnectedWaves(p, v) \in SUBSET(WaveSet)
-                     BY <2>4 DEF ConnectedWaves
+                <4>2 ReachableWaveLeaders(p, v) \in SUBSET(WaveSet)
+                     BY <2>4 DEF ReachableWaveLeaders
                 <4> QED BY <2>4, <3>1, <4>1, <4>2, UnchangedDefLem DEF AddVertexTn, LeaderConsensus!Next
            <3>2 CASE v.round % 4 # 1 \/ v.source # ChooseLeader((v.round \div 4)+1)
                 BY <3>2, <2>4 DEF AddVertexTn
