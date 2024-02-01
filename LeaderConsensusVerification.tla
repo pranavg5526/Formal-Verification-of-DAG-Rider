@@ -7,7 +7,31 @@ EXTENDS FiniteSets,
         Sequences, 
         TLAPS, 
         TLC 
-        
+
+---------------------------------------------------------------------------
+
+Contains(w, S) == \E i \in 1..Len(S) : S[i] = w
+
+Invariant1 == \A p \in ProcessorSet : decidedWave[p] # 0 => leaderReachablity[p][decidedWave[p]].exists = TRUE
+
+Invariant2 == \A p \in ProcessorSet : leaderSeq[p].current = IF decidedWave[p] = 0 THEN <<>> ELSE commitWithRef[p][decidedWave[p]]
+
+Invariant3 == \A p \in ProcessorSet, w \in WaveSet: \A x \in leaderReachablity[p][w].edges : leaderReachablity[p][x].exists = TRUE
+
+Invariant4 == \A p \in ProcessorSet, w, x \in WaveSet : Contains(w, commitWithRef[p][x]) => leaderReachablity[p][w].exists = TRUE
+
+Invariant5 == \A p \in ProcessorSet, w, x \in WaveSet : Contains(w, commitWithRef[p][x]) => IsPrefix(commitWithRef[p][w], commitWithRef[p][x])
+
+Invariant6 == \A p \in ProcessorSet, w \in WaveSet: leaderReachablity[p][w].exists = TRUE => commitWithRef[p][w] = IF leaderReachablity[p][w].edges = {} THEN <<w>> ELSE Append(commitWithRef[p][max(leaderReachablity[p][w].edges)], w) 
+
+Invariant7 == \A p, q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].exists = leaderReachablity[q][w].exists => commitWithRef[p][w] = commitWithRef[q][w]
+
+Invariant8 == \A p \in ProcessorSet, w \in WaveSet : (\A y \in WaveSet : y > w /\ leaderReachablity[p][y].exists => w \in leaderReachablity[p][y].edges) => (\A y \in WaveSet : y >= w /\ leaderReachablity[p][y].exists => Contains(w, commitWithRef[p][y])) 
+
+Invariant9 == \A p, q \in ProcessorSet, w \in WaveSet : decidedWave[p] # 0 /\ w >= decidedWave[p] /\ leaderReachablity[q][w].exists = TRUE => Contains(decidedWave[p], commitWithRef[q][w])
+
+Invariant10 == \A p, q \in ProcessorSet, w \in WaveSet : leaderReachablity[p][w].exists = TRUE /\ w >= decidedWave[q] /\ decidedWave[q] # 0 => IsPrefix(commitWithRef[q][decidedWave[q]], commitWithRef[p][w]) 
+
 ---------------------------------------------------------------------------
 
 LEMMA MaxInPlt == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E 
