@@ -55,7 +55,7 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
                      BY <3>3, NilVertexInNilVertexSetPlt
                 <4> QED BY <4>1, <4>2, <4>3
            <3> QED BY <2>3, <3>3 DEF Init
-      <2> QED BY <2>1, <2>2, <2>3 DEF Init, StateType
+      <2> QED BY <2>1, <2>2, <2>3 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
  <1>2 ASSUME [Next]_vars, StateType
       PROVE StateType'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW v \in VertexSet, Broadcast(p, r, v)
@@ -63,53 +63,53 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
                  /\ broadcastRecord' \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
            <3>1 CASE broadcastRecord[p][r] = FALSE
                 <4>1 [broadcastRecord EXCEPT ![p][r] = TRUE] \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
-                     BY <2>1, <1>2 DEF StateType
+                     BY <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                 <4>2 [q \in ProcessorSet \cup {"History"} |-> broadcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}] \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
                      <5>1 [sender |-> p, inRound |-> r, vertex |-> v] \in TaggedVertexSet
                           BY <2>1 DEF TaggedVertexSet
-                     <5> QED BY <2>1, <1>2, <5>1 DEF StateType
-                <4> QED BY <4>1, <4>2, <3>1, <2>1, <1>2 DEF StateType, Broadcast
+                     <5> QED BY <2>1, <1>2, <5>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                <4> QED BY <4>1, <4>2, <3>1, <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
            <3>2 CASE broadcastRecord[p][r] = TRUE
-                BY <3>2, <1>2, <2>1 DEF StateType, Broadcast
-           <3> QED BY <3>1, <3>2, <1>2, <2>1 DEF StateType, Broadcast
+                BY <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
+           <3> QED BY <3>1, <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
       <2>2 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
            PROVE StateType'
            <3>3 blocksToPropose[p] \in Seq(BlockSet)
-                BY  <2>2, <1>2 DEF StateType
+                BY  <2>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
            <3>1  Append(blocksToPropose[p], b) \in Seq(BlockSet)
-                 BY <3>3 DEF StateType
+                 BY <3>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
            <3>2 blocksToPropose' \in [ProcessorSet -> Seq(BlockSet)]
-                BY <3>1, <2>2, <1>2 DEF ProposeTn, StateType
-           <3> QED BY <3>2, <2>2, <1>2, VertexSetDefPlt DEF ProposeTn, StateType, TaggedVertexSet
+                BY <3>1, <2>2, <1>2 DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+           <3> QED BY <3>2, <2>2, <1>2, VertexSetDefPlt DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
       <2>3 ASSUME NEW p \in ProcessorSet, NextRoundTn(p)
            PROVE StateType'
             <3>1 [round EXCEPT ![p] = round[p]+1] \in [ProcessorSet -> RoundSet]
-                 BY <2>3, <1>2 DEF NextRoundTn, StateType
+                 BY <2>3, <1>2 DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
             <3>2 [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])] \in [ProcessorSet -> Seq(BlockSet)]
                  <4>1 blocksToPropose[p] \in Seq(BlockSet) /\ blocksToPropose[p] # <<>>
-                      BY <2>3, <1>2, <2>3 DEF StateType, NextRoundTn
+                      BY <2>3, <1>2, <2>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NextRoundTn
                  <4>2 Tail(blocksToPropose[p]) \in Seq(BlockSet)
                       BY <4>1, TailTypePlt
-                 <4> QED BY <4>2, <2>3, <1>2 DEF StateType
-            <3> QED BY <3>1, <3>2, <2>3, <1>2, <2>1, VertexSetDefPlt, CreateVertexTypePlt DEF NextRoundTn, StateType, TaggedVertexSet
+                 <4> QED BY <4>2, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+            <3> QED BY <3>1, <3>2, <2>3, <1>2, <2>1, VertexSetDefPlt, CreateVertexTypePlt DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
       <2>4 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, NEW r \in RoundSet, NEW q \in ProcessorSet, p # q, ReceiveVertexTn(p, q, r, v)
            PROVE StateType'
            <3>1 buffer' \in [ProcessorSet -> SUBSET(VertexSet)]
-                BY <2>4, <1>2 DEF StateType, ReceiveVertexTn
+                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3>2 broadcastNetwork' \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
-                BY <2>4, <1>2 DEF StateType, ReceiveVertexTn
-           <3> QED BY <3>1, <3>2, <2>4, <1>2, <2>1, VertexSetDefPlt DEF ReceiveVertexTn, StateType, TaggedVertexSet
+                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
+           <3> QED BY <3>1, <3>2, <2>4, <1>2, <2>1, VertexSetDefPlt DEF ReceiveVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
       <2>5 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, AddVertexTn(p, v)
            PROVE StateType'
            <3>1 dag' \in [ProcessorSet -> [RoundSet -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
                 <4>1 v.round \in RoundSet /\ v.source \in ProcessorSet \*/\ v.source \in ProcessorSet
                      BY VertexTypePlt, <2>5
                 <4>2 dag' = [dag EXCEPT ![p][v.round][v.source] = v]
-                     BY <2>5, <1>2  DEF AddVertexTn, StateType
-                <4> QED BY <4>1, <4>2, <2>5, <1>2 DEF StateType
-           <3> QED BY <3>1, <2>5, <1>2, VertexSetDefPlt DEF AddVertexTn, StateType, TaggedVertexSet
+                     BY <2>5, <1>2  DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                <4> QED BY <4>1, <4>2, <2>5, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+           <3> QED BY <3>1, <2>5, <1>2, VertexSetDefPlt DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
       <2>6 CASE UNCHANGED vars
-           BY <2>6, <2>1, <1>2, VertexSetDefPlt DEF vars, TaggedVertexSet, StateType
+           BY <2>6, <2>1, <1>2, VertexSetDefPlt DEF vars, TaggedVertexSet, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
       <2> QED  BY <2>2, <2>3, <2>4, <2>5, <2>6, <1>2 DEF Next
  <1> QED BY <1>1, <1>2, PTL DEF Spec
 
@@ -135,9 +135,9 @@ LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
            <3>1 ASSUME NEW t \in ProcessorSet
                 PROVE  buffer[t] \in SUBSET(buffer'[t])
                 <4>1 CASE t = p
-                     BY <4>1, <2>3, <1>2 DEF ReceiveVertexTn, StateType
+                     BY <4>1, <2>3, <1>2 DEF ReceiveVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                 <4>2 CASE t # p
-                     BY <4>2, <2>3, <1>2 DEF ReceiveVertexTn, StateType
+                     BY <4>2, <2>3, <1>2 DEF ReceiveVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                 <4> QED BY <4>1, <4>2
            <3> QED BY VertexSetDefPlt, <2>3, <1>2, <3>1 DEF Invariant1, ReceiveVertexTn
       <2>4 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, AddVertexTn(p, v)
@@ -146,13 +146,13 @@ LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
                 PROVE dag'[q][r][t] \in buffer'[q]
                 <4>1 CASE q = p /\ r = v.round /\ t = v.source
                      <5>1 dag'[q][r][t] = v
-                          BY <4>1, <3>1, <2>4, <1>2 DEF StateType, AddVertexTn
+                          BY <4>1, <3>1, <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, AddVertexTn
                      <5>2 v \in buffer'[q]
-                          BY <4>1, <2>4, <1>2 DEF StateType, AddVertexTn
+                          BY <4>1, <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, AddVertexTn
                      <5> QED BY <5>1, <4>1, <5>2
                 <4>2 CASE p # q \/ v.source # t \/ v.round # r
                      <5>1 dag'[q][r][t] = dag[q][r][t] /\ buffer'[q] = buffer[q]
-                          BY <4>2, <3>1, <2>4, <1>2 DEF AddVertexTn, StateType
+                          BY <4>2, <3>1, <2>4, <1>2 DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                      <5> QED BY <5>1, <3>1, <1>2 DEF Invariant1
                 <4> QED BY <4>1, <4>2
            <3> QED BY <3>1, VertexSetDefPlt, <1>2 DEF Invariant1
@@ -176,14 +176,14 @@ LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
                 PROVE Invariant2'
                 <4>1 CASE broadcastRecord[p][r] = FALSE
                      <5>1 broadcastNetwork'["History"] = broadcastNetwork["History"] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}
-                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, Broadcast
+                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
                      <5>2 broadcastRecord' = [broadcastRecord EXCEPT ![p][r] = TRUE]
-                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, Broadcast
+                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
                      <5>3 ASSUME NEW m \in broadcastNetwork'["History"]
                           PROVE broadcastRecord'[m.sender][m.inRound] = TRUE
                           <6>1 m.sender \in ProcessorSet /\ m.inRound \in RoundSet
                                <7>1 broadcastNetwork'["History"] \in SUBSET[sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet']
-                                    BY <1>2 DEF StateType, TaggedVertexSet
+                                    BY <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
                                <7> QED BY <7>1, <5>3
                           <6>2 CASE m \in broadcastNetwork["History"]
                                <7>1 broadcastRecord[m.sender][m.inRound] = TRUE
@@ -191,27 +191,27 @@ LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
                                <7>2 ASSUME NEW a \in ProcessorSet, NEW b \in RoundSet
                                     PROVE broadcastRecord'[a][b] = broadcastRecord[a][b] \/ broadcastRecord'[a][b] = TRUE
                                     <8>1 CASE a = p /\ b = r
-                                         BY <8>1, <5>2, <1>2 DEF StateType
+                                         BY <8>1, <5>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                                     <8>2 CASE a # p \/ b # r
-                                         BY <8>2, <5>2, <1>2 DEF StateType
+                                         BY <8>2, <5>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                                     <8> QED BY <8>1, <8>2
                                <7> QED BY <7>1, <7>2, <6>1
                           <6>3 CASE m = [sender |-> p, inRound |-> r, vertex |-> v]
-                               BY <6>3, <5>2, <1>2 DEF StateType
+                               BY <6>3, <5>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                           <6> QED BY <6>2, <6>3, <5>1
                      <5> QED BY <1>2, <5>3 DEF Invariant2
                 <4>2 CASE broadcastRecord[p][r] = TRUE
                      <5>1 UNCHANGED <<broadcastNetwork, broadcastRecord>>
                           BY <4>2, <2>2, <3>1 DEF Broadcast
                      <5> QED BY <5>1, <1>2 DEF Invariant2
-                <4> QED BY <4>1, <4>2, <3>1, <2>2, <1>2 DEF StateType
+                <4> QED BY <4>1, <4>2, <3>1, <2>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
            <3> QED BY VertexSetDefPlt, <2>2, <1>2, CreateVertexTypePlt, <3>1 DEF Invariant2, NextRoundTn, Broadcast
       <2>3 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW q \in ProcessorSet, NEW v \in VertexSet, p# q, ReceiveVertexTn(p, q, r, v)
            PROVE Invariant2'
            <3>1 broadcastNetwork'["History"] =  broadcastNetwork["History"]
                 <4>1 p # "History"
                      BY <2>3, ProcSetAsm DEF ProcessorSet
-                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3>2 broadcastRecord' = broadcastRecord
                 BY <2>3 DEF ReceiveVertexTn
            <3> QED BY <3>1, <3>2, VertexSetDefPlt, <2>3, <1>2 DEF Invariant2, ReceiveVertexTn
@@ -240,9 +240,9 @@ LEMMA Invariant3CorrectnessLem == Spec => []Invariant3
            <3>1 broadcastNetwork'["History"] =  broadcastNetwork["History"]
                 <4>1 p # "History"
                      BY <2>3, ProcSetAsm DEF ProcessorSet
-                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3>2 \A z \in ProcessorSet : broadcastNetwork'[z] \in SUBSET(broadcastNetwork[z])
-                BY <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                BY <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3> QED BY <3>1, <3>2, <2>3, <1>2 DEF Invariant3, ReceiveVertexTn
       <2>4 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, AddVertexTn(p, v)
            PROVE Invariant3'
@@ -269,12 +269,12 @@ LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
            <3>1 broadcastNetwork'["History"] =  broadcastNetwork["History"]
                 <4>1 p # "History"
                      BY <2>3, ProcSetAsm DEF ProcessorSet
-                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3>2 ASSUME NEW t \in ProcessorSet, NEW u \in buffer'[t]
                 PROVE [ sender |-> u.source, inRound |-> u.round, vertex |-> u] \in broadcastNetwork'["History"]
                 <4>1 CASE p = t
                      <5>1 buffer'[p] = buffer[p] \cup {v}
-                          BY <4>1, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                          BY <4>1, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
                      <5>2 CASE u = v
                           <6>1 [sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
                                BY <2>3, <1>2 DEF ReceiveVertexTn, Invariant3
@@ -286,7 +286,7 @@ LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
                      <5> QED BY <5>2, <5>3
                 <4>2 CASE p # t
                      <5>1 buffer'[t] = buffer[t]
-                          BY <4>2, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                          BY <4>2, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
                      <5> QED BY <5>1, <3>1, <3>2, <1>2 DEF Invariant4
                 <4> QED BY <4>1, <4>2
            <3> QED BY <3>2, <2>3, <1>2 DEF Invariant4, ReceiveVertexTn
@@ -313,9 +313,9 @@ LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
                 PROVE Invariant5'
                 <4>1 CASE broadcastRecord[p][r] = FALSE
                      <5>1 broadcastNetwork'["History"] = broadcastNetwork["History"] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}
-                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, Broadcast
+                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
                      <5>2 broadcastRecord' = [broadcastRecord EXCEPT ![p][r] = TRUE]
-                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, Broadcast
+                          BY <3>1, <2>2, <1>2, <4>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
                      <5>3 ASSUME NEW m \in broadcastNetwork'["History"], NEW o \in broadcastNetwork'["History"], m.sender = o.sender, m.inRound = o.inRound
                           PROVE m = o
                           <6>1 CASE m \in broadcastNetwork["History"] /\ o = [sender |-> p, inRound |-> r, vertex |-> v]
@@ -334,14 +334,14 @@ LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
                      <5>1 UNCHANGED <<broadcastNetwork, broadcastRecord>>
                           BY <4>2, <2>2, <3>1 DEF Broadcast
                      <5> QED BY <5>1, <1>2 DEF Invariant5
-                <4> QED BY <4>1, <4>2, <3>1, <2>2, <1>2 DEF StateType
+                <4> QED BY <4>1, <4>2, <3>1, <2>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
            <3> QED BY VertexSetDefPlt, <2>2, <1>2, CreateVertexTypePlt, <3>1 DEF Invariant5, NextRoundTn, Broadcast
       <2>3 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW q \in ProcessorSet, NEW v \in VertexSet, p# q, ReceiveVertexTn(p, q, r, v)
            PROVE Invariant5'
            <3>1 broadcastNetwork'["History"] =  broadcastNetwork["History"]
                 <4>1 p # "History"
                      BY <2>3, ProcSetAsm DEF ProcessorSet
-                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, ReceiveVertexTn
+                <4> QED BY <4>1, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
            <3> QED BY <3>1, VertexSetDefPlt, <2>3, <1>2 DEF Invariant5, ReceiveVertexTn
       <2>4 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, AddVertexTn(p, v)
            PROVE Invariant5'
@@ -358,13 +358,13 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
            PROVE dag[q][r][t].source = t /\ dag[q][r][t].round = r
            <3>1 CASE r = 0
                 <4>1 dag[q][r][t] = [round |-> r, source |-> t, block |-> "Empty", edges |-> {}]
-                      BY <3>1, <2>1 DEF Init, StateType, DummyVertex
+                      BY <3>1, <2>1 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, DummyVertex
                 <4>2 [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
            <3>2 CASE r # 0
                 <4>1  dag[q][r][t] = [round |-> r, source |-> t, block |-> "Nil", edges |-> {}]
-                      BY <3>2, <2>1 DEF Init, StateType, NilVertex
+                      BY <3>2, <2>1 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NilVertex
                 <4>2 [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
@@ -387,11 +387,11 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
                 PROVE dag'[q][r][t].source = t /\ dag'[q][r][t].round = r
                 <4>1 CASE q = p /\ r = v.round /\ t = v.source
                      <5>1 dag'[q][r][t] = v
-                          BY <4>1, <3>1, <2>4, <1>2 DEF StateType, AddVertexTn
+                          BY <4>1, <3>1, <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, AddVertexTn
                      <5> QED BY <5>1, <4>1
                 <4>2 CASE p # q \/ v.source # t \/ v.round # r
                      <5>1 dag'[q][r][t] = dag[q][r][t]
-                          BY <4>2, <3>1, <2>4, <1>2 DEF AddVertexTn, StateType
+                          BY <4>2, <3>1, <2>4, <1>2 DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                      <5> QED BY <5>1, <3>1, <1>2 DEF Invariant6
                 <4> QED BY <4>1, <4>2, VertexTypePlt
            <3> QED BY <3>1, VertexSetDefPlt, <2>4, <1>2 DEF Invariant6, AddVertexTn, VertexSet
@@ -399,6 +399,7 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant6, vars, VertexSet
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+
 
 -----------------------------------------------------------------------------
 
@@ -431,10 +432,12 @@ THEOREM DagConsistencyCorrectnessThm == Spec => []DagConsistency
     <2>3 QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, PTL, Invariant1CorrectnessLem, Invariant4CorrectnessLem, Invariant5CorrectnessLem, Invariant6CorrectnessLem DEF Spec
 
+
 -----------------------------------------------------------------------------
 
 LEMMA UnchangedDefLem == WaveSet = LeaderConsensus!WaveSet /\ ProcessorSet = LeaderConsensus!ProcessorSet /\ NumWaveAsm = LeaderConsensus!NumWaveAsm /\ NumProcessorAsm = LeaderConsensus!NumProcessorAsm
                       BY DEF  WaveSet, LeaderConsensus!WaveSet, ProcessorSet, LeaderConsensus!ProcessorSet, NumWaveAsm, LeaderConsensus!NumWaveAsm, NumProcessorAsm, LeaderConsensus!NumProcessorAsm
+
 
 -----------------------------------------------------------------------------
 
@@ -450,10 +453,10 @@ LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
            PROVE LeaderConsensus!Next \/ UNCHANGED LeaderConsensus!vars
            <3>1 ASSUME NEW q \in ProcessorSet, NEW w \in WaveSet, ReadyWave(p, w)
                 PROVE LeaderConsensus!Next \/ UNCHANGED LeaderConsensus!vars
-                BY UnchangedDefLem, <3>1, <1>2 DEF ReadyWave, StateType, LeaderConsensus!Next
+                BY UnchangedDefLem, <3>1, <1>2 DEF ReadyWave, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!Next
            <3>2 CASE round[p]>0 /\ (round[p] % 4) = 0
                 <4>1 round[p] \div 4 \in WaveSet
-                     BY DivProperty2Plt, <3>2, <1>2, <2>1, NumWaveAsm DEF StateType, WaveSet, RoundSet
+                     BY DivProperty2Plt, <3>2, <1>2, <2>1, NumWaveAsm DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, WaveSet, RoundSet
                 <4> QED BY <4>1, <3>2, <3>1, <2>2, <1>2 DEF NextRoundTn
            <3>3 CASE ~(round[p]>0 /\ (round[p] % 4) = 0)
                 BY <3>3, <2>2 DEF NextRoundTn
@@ -477,10 +480,12 @@ LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, PTL, TypeCorrectnessLem DEF Spec, LeaderConsensus!Spec
 
+
 -----------------------------------------------------------------------------
 
 THEOREM SystemTypeCorrectnessLem == Spec => []ComposedStateType
   BY TypeCorrectnessLem, PTL, LeaderConsensus!TypeCorrectnessLem, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm DEF ComposedStateType
+
 
 -----------------------------------------------------------------------------
 
@@ -491,4 +496,3 @@ THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMo
   BY LeaderConsensus!LeaderConsensusMonotonicityCorrectnessThm, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!LeaderConsensusMonotonicity, LeaderConsensusMonotonicity
 
 =============================================================================
-
