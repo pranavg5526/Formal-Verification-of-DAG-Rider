@@ -400,7 +400,6 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
 
-
 -----------------------------------------------------------------------------
 
 THEOREM DagConsistencyCorrectnessThm == Spec => []DagConsistency
@@ -432,12 +431,10 @@ THEOREM DagConsistencyCorrectnessThm == Spec => []DagConsistency
     <2>3 QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, PTL, Invariant1CorrectnessLem, Invariant4CorrectnessLem, Invariant5CorrectnessLem, Invariant6CorrectnessLem DEF Spec
 
-
 -----------------------------------------------------------------------------
 
 LEMMA UnchangedDefLem == WaveSet = LeaderConsensus!WaveSet /\ ProcessorSet = LeaderConsensus!ProcessorSet /\ NumWaveAsm = LeaderConsensus!NumWaveAsm /\ NumProcessorAsm = LeaderConsensus!NumProcessorAsm
                       BY DEF  WaveSet, LeaderConsensus!WaveSet, ProcessorSet, LeaderConsensus!ProcessorSet, NumWaveAsm, LeaderConsensus!NumWaveAsm, NumProcessorAsm, LeaderConsensus!NumProcessorAsm
-
 
 -----------------------------------------------------------------------------
 
@@ -480,12 +477,10 @@ LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, PTL, TypeCorrectnessLem DEF Spec, LeaderConsensus!Spec
 
-
 -----------------------------------------------------------------------------
 
 THEOREM SystemTypeCorrectnessLem == Spec => []ComposedStateType
   BY TypeCorrectnessLem, PTL, LeaderConsensus!TypeCorrectnessLem, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm DEF ComposedStateType
-
 
 -----------------------------------------------------------------------------
 

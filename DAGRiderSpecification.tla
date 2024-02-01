@@ -60,86 +60,98 @@ NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 
-(* blocksToPropose: For every process p, blocksToPropose stores sequence
-                    of blocks that are proposed but not yet initialiseed
-                    to order (blocks whose vertex is not yet created by
-                    the process).                                         *)
+(* For every process p, blocksToPropose stores sequence *)
+(* of blocks that are proposed but not yet initialiseed *)
+(* to order (blocks whose vertex is not yet created by  *)
+(* the process).                                        *)
 
 VARIABLE blocksToPropose
 
+BlocksToProposeType == blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
+
 ------------------------------
 
-(* broadcastNetwork: For every process p, broadcastNetwork stores set 
-                     of TaggedVertices that are broadcasted but not 
-                     yet received by p. Addtionally it also stores
-                     history of all the TaggedVertices ever broadcas-
-                     -ted on the network.                                 *)
+(* For every process p, broadcastNetwork stores set of  *)
+(* TaggedVertices that are broadcasted but not yet      *)
+(* received by p. Addtionally it also stores  history   *)
+(* of all the TaggedVertices ever broadcasted on the    *)
+(* network.                                             *)
 
 VARIABLE broadcastNetwork
 
+BroadcastNetworkType == broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
+
 ------------------------------
 
-(* broadcastRecord: For every process p and round r, broadcastRecord
-                    stores weather or not process p broadcasted a
-                    vertex in round r.                                    *)
+(* For every process p and round r, broadcastRecord     *)
+(* stores weather or not process p broadcasted a        *)
+(* vertex in round r.                                   *)
 
 VARIABLE broadcastRecord
 
+BroadcastRecordType == broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+
 ------------------------------
 
-(* buffer: For every process p, buffer stores set of vertices recieved
-           by p via the broadcast.                                        *)
+(* For every process p, buffer stores set of vertices   *)
+(* recieved by p via the broadcast.                     *)
 
 VARIABLE buffer
 
+BufferType == buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+
 ------------------------------
 
-(* dag: For every process p, round r, process q, dag stores vertex in
-        the DAG of process p created by process q in round r, if such
-        a vertex does not exists in the DAG then it stores
-        NilVertex(q, r).                                                  *)
-    
+(* For every process p, round r, process q, dag stores  *)
+(* vertex in the DAG of process p created by process q  *)
+(* in round r, if such a vertex does not exists in the  *)
+(* DAG then it stores NilVertex(q, r).                  *)
+
 VARIABLE dag
 
+DagType == dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+
 ------------------------------
 
-(* round: For every process p, round stores the round of DAG constru-
-          -ction for process p.                                           *)
+(* For every process p, round stores the round of DAG   *)
+(* construction for process p.                          *) 
 
 VARIABLE round
 
-------------------------------
-
-(* Since DAGRiderSpecification extends LeaderConsensusSpecification, we
-   additionally have the four variables (commitWithRef, decidedWave,
-   leaderReachablity, leaderSeq) from the LeaderConsensusSpecification.    *)
-
-VARIABLE commitWithRef
-
-VARIABLE decidedWave
-
-VARIABLE leaderReachablity
-
-VARIABLE leaderSeq
+RoundType == round \in [ProcessorSet -> RoundSet]
 
 ------------------------------
 
-StateType ==
-          /\ blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
-          /\ broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
-          /\ broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
-          /\ buffer \in [ProcessorSet -> SUBSET(VertexSet)]
-          /\ dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
-          /\ round \in [ProcessorSet -> RoundSet]
+(* Since DAGRiderSpecification extends LeaderConsensus- *)
+(* Specification, we additionally have the four var-    *)
+(* iables (commitWithRef, decidedWave, leader-          *)
+(* Reachablity, leaderSeq) from the LeaderConsensus-    *)
+(* Specification.                                       *)
+
+VARIABLE commitWithRef, 
+         decidedWave,
+         leaderReachablity,
+         leaderSeq
 
 ----------------------------------------------------------------------------
 
-LeaderConsensus  == INSTANCE LeaderConsensusVerification WITH NumWaves <- NumWaves,
-                                                     NumProcessors <- NumProcessors,
-                                                     commitWithRef <- commitWithRef,
-                                                     decidedWave <- decidedWave,
-                                                     leaderReachablity <- leaderReachablity,
-                                                     leaderSeq <- leaderSeq
+LeaderConsensus  == INSTANCE LeaderConsensusVerification 
+                    WITH NumWaves <- NumWaves,
+                         NumProcessors <- NumProcessors,
+                         commitWithRef <- commitWithRef,
+                         decidedWave <- decidedWave,
+                         leaderReachablity <- leaderReachablity,
+                         leaderSeq <- leaderSeq
+
+----------------------------------------------------------------------------
+
+StateType ==
+          /\ BlocksToProposeType
+          /\ BroadcastNetworkType
+          /\ BroadcastRecordType
+          /\ BufferType
+          /\ DagType
+          /\ RoundType
 
 ComposedStateType == StateType /\ LeaderConsensus!StateType
 
@@ -249,6 +261,5 @@ Invariant6 == \A p, q \in ProcessorSet, r \in RoundSet: dag[p][r][q].source = q 
 Invariant4 == \A p \in ProcessorSet : \A v \in buffer[p] : [ sender |-> v.source, inRound |-> v.round, vertex |-> v] \in broadcastNetwork["History"]
 
 Invariant5 == \A m, o \in broadcastNetwork["History"]: m.sender = o.sender /\ m.inRound = o.inRound => m = o
-
 
 =============================================================================

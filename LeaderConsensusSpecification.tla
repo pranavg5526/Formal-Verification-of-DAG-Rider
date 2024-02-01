@@ -25,45 +25,49 @@ WaveSet == 1..NumWaves
 
 ----------------------------------------------------------------------------
 
-(* commitWithRef: For every process p and wave w, commitWithRef stores 
-                  the sequence of waves that w will commit if decided 
-                  by process p.                                           *)
+(* For every process p and wave w, commitWithRef stores  the sequence of  *)
+(* waves that w will commit if decided by process p.                      *) 
 
 VARIABLES commitWithRef
 
+CommitWithRefType == commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
+
 ------------------------------
 
-(* decidedWave: For every process p, decidedWave stores the last deci-
-                -ded wave by p.                                           *)
+(* For every process p, decidedWave stores the last decided wave by p.    *)
 
 VARIABLES decidedWave
 
+DecidedWaveType == decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
+
 ------------------------------
 
-(* leaderReachablity: For every process p and wave w leaderReachablity
-                      stores information about existence of leader 
-                      vertex of w in the DAG of p, along with the set
-                      of waves whose leader vertices are reachable
-                      from leader vertex of w.                            *)
+(* For every process p and wave w leaderReachablity stores information   *)
+(* about existence of leader vertex of w in the DAG of p, along with the *)
+(* set of waves whose leader vertices are reachable from leader vertex   *)
+(* of w.                                                                 *)
 
 VARIABLES leaderReachablity
 
+LeaderReachabilityType == leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
+
 ------------------------------
 
-(* leaderSeq: For every process p, leaderSeq stores the sequence of
-              waves (in the increasing order) committed by the last
-              and the previous last decided wave.                         *)
+(* For every process p, leaderSeq stores the sequence of waves (in the   *)
+(* increasing order) committed by the last and the previous last decided *) 
+(* wave.                                                                 *)
 
 VARIABLES leaderSeq
+
+LeaderSeqType == leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
 
 ------------------------------
 
 StateType == 
-          /\ commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
-          /\ decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
-          /\ leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
-          /\ leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
-
+          /\ CommitWithRefType
+          /\ DecidedWaveType
+          /\ LeaderReachabilityType
+          /\ LeaderSeqType
 
 ----------------------------------------------------------------------------
 
@@ -71,7 +75,6 @@ Init == /\ commitWithRef = [p \in ProcessorSet |-> [w \in WaveSet |-> <<>>]]
         /\ decidedWave = [p \in ProcessorSet |-> 0]
         /\ leaderReachablity = [p \in ProcessorSet |-> [w \in WaveSet |->[exists |-> FALSE, edges |-> {}]]]
         /\ leaderSeq = [p \in ProcessorSet |-> [current |-> <<>>, last |-> <<>>]]
-
 
 ----------------------------------------------------------------------------
         
