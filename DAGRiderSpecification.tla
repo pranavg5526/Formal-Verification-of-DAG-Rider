@@ -299,7 +299,9 @@ Broadcast(p, r, v) ==
    ELSE UNCHANGED <<broadcastNetwork, broadcastRecord>>
 
 ReadyWave(p, w) == 
-   IF dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet /\ \E Q \in SUBSET(AddedVertices(p, 4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : Path(u, WaveLeader(p, w))
+   IF ( /\ dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet 
+        /\ \E Q \in SUBSET(AddedVertices(p, 4*w)): /\ Cardinality(Q) > 2*NumFaultyProcessors 
+                                                   /\ \A u \in Q : Path(u, WaveLeader(p, w)) )
    THEN LeaderConsensus!UpdateDecidedWaveTn(p, w)
    ELSE UNCHANGED LeaderConsensus!vars
 
@@ -347,7 +349,9 @@ AddVertexTn(p, v) ==
    /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
    /\ v.edges \in AddedVertices(p, v.round -1)
    /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
-   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ReachableWaveLeaders(p, v)) ELSE UNCHANGED LeaderConsensus!vars
+   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) 
+      THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ReachableWaveLeaders(p, v)) 
+      ELSE UNCHANGED LeaderConsensus!vars
    /\ UNCHANGED <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, round>>
 
 ----------------------------------------------------------------------------
