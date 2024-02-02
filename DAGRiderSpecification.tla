@@ -77,21 +77,25 @@ CONSTANT ChooseLeader(_)
 (* it is defined stores entire causal history of the     *)
 (* node.                                                 *)
 
-DummyVertex(p) == [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
+DummyVertex(p) == 
+   [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
 
-DummyVertexSet == {DummyVertex(p) : p \in ProcessorSet}
+DummyVertexSet == 
+   {DummyVertex(p) : p \in ProcessorSet}
 
 RECURSIVE InRoundVertex(_)
 
-InRoundVertex(r) == IF r = 0
-                    THEN DummyVertexSet
-                    ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(InRoundVertex(r-1))]
+InRoundVertex(r) == 
+   IF r = 0
+   THEN DummyVertexSet
+   ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(InRoundVertex(r-1))]
 
 RECURSIVE UntilRoundVertex(_)
 
-UntilRoundVertex(r) == IF r = 0
-                       THEN InRoundVertex(r)
-                       ELSE InRoundVertex(r) \cup UntilRoundVertex(r-1)
+UntilRoundVertex(r) == 
+   IF r = 0
+   THEN InRoundVertex(r)
+   ELSE InRoundVertex(r) \cup UntilRoundVertex(r-1)
 
 VertexSet == UntilRoundVertex(4*NumWaves)
 
@@ -102,7 +106,8 @@ VertexSet == UntilRoundVertex(4*NumWaves)
 (* sent. TaggedVertexSet is set of all such tagged       *)
 (* vertices                                              *)
 
-TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
+TaggedVertexSet == 
+   [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
 
 -----------------------------------------------------------
 
@@ -115,9 +120,11 @@ TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSe
 (* We define NilVertexSet as the set of all nil          *)
 (* vertices.                                             *)
 
-NilVertex(p, r) == [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
+NilVertex(p, r) == 
+   [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
 
-NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
+NilVertexSet == 
+   {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 (*--------------------------STATE-VARIABLES--------------------------------*)
@@ -129,7 +136,11 @@ NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 VARIABLE blocksToPropose
 
-BlocksToProposeType == blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
+BlocksToProposeType == 
+   blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
+
+InitBlocksToPropose ==  
+   blocksToPropose = [p \in ProcessorSet |-> <<>> ]
 
 -----------------------------------------------------------
 
@@ -141,7 +152,11 @@ BlocksToProposeType == blocksToPropose \in [ProcessorSet -> Seq(BlockSet)]
 
 VARIABLE broadcastNetwork
 
-BroadcastNetworkType == broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
+BroadcastNetworkType == 
+   broadcastNetwork \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
+
+InitBroadcastNetwork == 
+   broadcastNetwork = [p \in ProcessorSet \cup {"History"} |-> {}]
 
 -----------------------------------------------------------
 
@@ -151,7 +166,11 @@ BroadcastNetworkType == broadcastNetwork \in [ProcessorSet \cup {"History"} ->SU
 
 VARIABLE broadcastRecord
 
-BroadcastRecordType == broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+BroadcastRecordType == 
+   broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+
+InitBroadcastRecord == 
+   broadcastRecord = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
 
 -----------------------------------------------------------
 
@@ -160,7 +179,11 @@ BroadcastRecordType == broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN
 
 VARIABLE buffer
 
-BufferType == buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+BufferType == 
+   buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+
+InitBuffer ==
+   buffer = [p \in ProcessorSet |-> {}]
 
 -----------------------------------------------------------
 
@@ -171,7 +194,11 @@ BufferType == buffer \in [ProcessorSet -> SUBSET(VertexSet)]
 
 VARIABLE dag
 
-DagType == dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+DagType == 
+   dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+
+InitDag == 
+   dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)]]]
 
 -----------------------------------------------------------
 
@@ -180,7 +207,11 @@ DagType == dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cu
 
 VARIABLE round
 
-RoundType == round \in [ProcessorSet -> RoundSet]
+RoundType == 
+   round \in [ProcessorSet -> RoundSet]
+
+InitRound == 
+   round = [p \in ProcessorSet |-> 0]
 
 -----------------------------------------------------------
 
@@ -197,27 +228,17 @@ VARIABLE commitWithRef,
 
 -----------------------------------------------------------
 
-LeaderConsensus  == INSTANCE LeaderConsensusVerification 
-                    WITH NumWaves <- NumWaves,
-                         NumProcessors <- NumProcessors,
-                         commitWithRef <- commitWithRef,
-                         decidedWave <- decidedWave,
-                         leaderReachablity <- leaderReachablity,
-                         leaderSeq <- leaderSeq
+LeaderConsensus == 
+   INSTANCE LeaderConsensusVerification 
+   WITH NumWaves <- NumWaves,
+        NumProcessors <- NumProcessors,
+        commitWithRef <- commitWithRef,
+        decidedWave <- decidedWave,
+        leaderReachablity <- leaderReachablity,
+        leaderSeq <- leaderSeq
 
 -----------------------------------------------------------
 
-StateType ==
-          /\ BlocksToProposeType
-          /\ BroadcastNetworkType
-          /\ BroadcastRecordType
-          /\ BufferType
-          /\ DagType
-          /\ RoundType
-
-ComposedStateType == StateType /\ LeaderConsensus!StateType
-
-----------------------------------------------------------------------------
 (*-------------------------STATE-TRANSITIONS-------------------------------*)
 
 (* Before defining transitions we define some useful      *)
@@ -231,14 +252,15 @@ ComposedStateType == StateType /\ LeaderConsensus!StateType
 (*      Returns p's leader vertex of wave w.              *)
 
 RECURSIVE Path(_, _)
-Path(u, v) == IF u = v
-               THEN TRUE
-               ELSE IF u.round = 0
-                    THEN FALSE
-                    ELSE \E x \in u.edges : Path(x, v)
+Path(u, v) == 
+   IF u = v
+   THEN TRUE
+   ELSE IF u.round = 0
+        THEN FALSE
+        ELSE \E x \in u.edges : Path(x, v)
 
-
-AddedVertices(p, r) == {v \in VertexSet : v.round = r /\ dag[p][r][v.source] = v}
+AddedVertices(p, r) == 
+   {v \in VertexSet : v.round = r /\ dag[p][r][v.source] = v}
 
 WaveLeader(p, w) == dag[p][4*w-3][ChooseLeader(w)]
 
@@ -247,9 +269,10 @@ WaveLeader(p, w) == dag[p][4*w-3][ChooseLeader(w)]
 (* Transition ProposeTn(p, b) encodes  process p         *)
 (* proposing block b.                                    *)
 
-ProposeTn(p, b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
-                   /\ UNCHANGED LeaderConsensus!vars
-                   /\ UNCHANGED <<broadcastNetwork, broadcastRecord, buffer, dag, round>>
+ProposeTn(p, b) == 
+   /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(blocksToPropose[p], b)]
+   /\ UNCHANGED LeaderConsensus!vars
+   /\ UNCHANGED <<broadcastNetwork, broadcastRecord, buffer, dag, round>>
 
 -----------------------------------------------------------
 
@@ -263,39 +286,47 @@ ProposeTn(p, b) == /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Append(b
 (* condition is satisfied it takes UpdateDecidedWaveTn in *)
 (* LeaderConsensus.                                       *)
 
-CreateVertex(p, r) == [round |-> r, source |-> p, block |-> Head(blocksToPropose[p]), edges |-> AddedVertices(p, r-1)]
+CreateVertex(p, r) == 
+   [round |-> r, 
+    source |-> p, 
+    block |-> Head(blocksToPropose[p]), 
+    edges |-> AddedVertices(p, r-1)]
 
-Broadcast(p, r, v) == IF broadcastRecord[p][r] = FALSE
-                      THEN /\ broadcastRecord' = [broadcastRecord EXCEPT ![p][r] = TRUE]
-                           /\ broadcastNetwork' = [q \in ProcessorSet \cup {"History"} |-> broadcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}]
-                      ELSE UNCHANGED <<broadcastNetwork, broadcastRecord>>
+Broadcast(p, r, v) == 
+   IF broadcastRecord[p][r] = FALSE
+   THEN /\ broadcastRecord' = [broadcastRecord EXCEPT ![p][r] = TRUE]
+        /\ broadcastNetwork' = [q \in ProcessorSet \cup {"History"} |-> broadcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}]
+   ELSE UNCHANGED <<broadcastNetwork, broadcastRecord>>
 
-ReadyWave(p, w) == IF dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet /\ \E Q \in SUBSET(AddedVertices(p, 4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : Path(u, WaveLeader(p, w))
-                   THEN LeaderConsensus!UpdateDecidedWaveTn(p, w)
-                   ELSE UNCHANGED LeaderConsensus!vars
+ReadyWave(p, w) == 
+   IF dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet /\ \E Q \in SUBSET(AddedVertices(p, 4*w)): Cardinality(Q) > 2*NumFaultyProcessors /\ \A u \in Q : Path(u, WaveLeader(p, w))
+   THEN LeaderConsensus!UpdateDecidedWaveTn(p, w)
+   ELSE UNCHANGED LeaderConsensus!vars
 
-NextRoundTn(p) ==  /\ round[p]+1 \in RoundSet
-                   /\ Cardinality(AddedVertices(p, round[p])) > 2*NumFaultyProcessors
-                   /\ blocksToPropose[p] # <<>>
-                   /\ Broadcast(p, round[p]+1, CreateVertex(p, round[p]+1))
-                   /\ round' = [round EXCEPT ![p] = round[p]+1]
-                   /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
-                   /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED LeaderConsensus!vars
-                   /\ UNCHANGED <<buffer, dag>>
+NextRoundTn(p) ==  
+   /\ round[p]+1 \in RoundSet
+   /\ Cardinality(AddedVertices(p, round[p])) > 2*NumFaultyProcessors
+   /\ blocksToPropose[p] # <<>>
+   /\ Broadcast(p, round[p]+1, CreateVertex(p, round[p]+1))
+   /\ round' = [round EXCEPT ![p] = round[p]+1]
+   /\ blocksToPropose' = [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])]
+   /\ IF round[p]>0 /\ (round[p] % 4) = 0 THEN ReadyWave(p, (round[p] \div 4)) ELSE UNCHANGED LeaderConsensus!vars
+   /\ UNCHANGED <<buffer, dag>>
 
 -----------------------------------------------------------
 
 (* Transition ReceiveVertexTn(p, q, r, v) encodes process *)
 (* p receiving vertex v created in round r by process q.  *)
 
-ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \in broadcastNetwork[p]
-                               /\ v.source = q
-                               /\ v.round = r
-                               /\ Cardinality(v.edges) > 2*NumFaultyProcessors
-                               /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
-                               /\ broadcastNetwork' = [broadcastNetwork EXCEPT ![p] = broadcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
-                               /\ UNCHANGED LeaderConsensus!vars
-                               /\ UNCHANGED <<blocksToPropose, broadcastRecord, dag, round>>
+ReceiveVertexTn(p, q, r, v) == 
+   /\ [sender |-> q, inRound |-> r, vertex |-> v] \in broadcastNetwork[p]
+   /\ v.source = q
+   /\ v.round = r
+   /\ Cardinality(v.edges) > 2*NumFaultyProcessors
+   /\ buffer' = [buffer EXCEPT ![p] = buffer[p] \cup {v}]
+   /\ broadcastNetwork' = [broadcastNetwork EXCEPT ![p] = broadcastNetwork[p] \ {[sender |-> q, inRound |-> r, vertex |-> v]}]
+   /\ UNCHANGED LeaderConsensus!vars
+   /\ UNCHANGED <<blocksToPropose, broadcastRecord, dag, round>>
 
 -----------------------------------------------------------
 
@@ -307,15 +338,17 @@ ReceiveVertexTn(p, q, r, v) == /\ [sender |-> q, inRound |-> r, vertex |-> v] \i
 (* vertex in p, is in causal history of v                *)
 (* (ReachableWaveLeaders).                               *)
 
-ReachableWaveLeaders(p, v) == {w \in WaveSet : Path(v, WaveLeader(p, w))}
+ReachableWaveLeaders(p, v) == 
+   {w \in WaveSet : Path(v, WaveLeader(p, w))}
 
-AddVertexTn(p, v) == /\ v \in buffer[p]
-                     /\ v.round <= round[p]
-                     /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
-                     /\ v.edges \in AddedVertices(p, v.round -1)
-                     /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
-                     /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ReachableWaveLeaders(p, v)) ELSE UNCHANGED LeaderConsensus!vars
-                     /\ UNCHANGED <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, round>>
+AddVertexTn(p, v) == 
+   /\ v \in buffer[p]
+   /\ v.round <= round[p]
+   /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
+   /\ v.edges \in AddedVertices(p, v.round -1)
+   /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
+   /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) THEN LeaderConsensus!UpdateWaveTn(p, (v.round \div 4)+1, ReachableWaveLeaders(p, v)) ELSE UNCHANGED LeaderConsensus!vars
+   /\ UNCHANGED <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, round>>
 
 ----------------------------------------------------------------------------
 (*---------------------------COMPLETE-SPEC---------------------------------*)
@@ -326,18 +359,31 @@ AddVertexTn(p, v) == /\ v \in buffer[p]
 (* leading to the next state, the variables, and the   *)
 (* system specification, respectively.                 *)
 
-Init == /\ blocksToPropose = [p \in ProcessorSet |-> <<>> ]
-        /\ broadcastNetwork = [p \in ProcessorSet \cup {"History"} |-> {}]
-        /\ broadcastRecord  = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
-        /\ buffer = [p \in ProcessorSet |-> {}]
-        /\ dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)]]]
-        /\ round = [p \in ProcessorSet |-> 0]
-        /\ LeaderConsensus!Init
+StateType ==
+   /\ BlocksToProposeType
+   /\ BroadcastNetworkType
+   /\ BroadcastRecordType
+   /\ BufferType
+   /\ DagType
+   /\ RoundType
+   /\ LeaderConsensus!StateType
 
-Next == \E p \in ProcessorSet, r \in RoundSet, v \in VertexSet, b \in BlockSet: \E q \in ProcessorSet\{p} : \/ ProposeTn(p, b)
-                                                                                                            \/ NextRoundTn(p)
-                                                                                                            \/ ReceiveVertexTn(p, q, r, v)
-                                                                                                            \/ AddVertexTn(p, v)
+Init == 
+   /\ InitBlocksToPropose
+   /\ InitBroadcastNetwork
+   /\ InitBroadcastRecord
+   /\ InitBuffer
+   /\ InitDag
+   /\ InitRound
+   /\ LeaderConsensus!Init
+
+Next == 
+   \E p \in ProcessorSet, r \in RoundSet, v \in VertexSet, b \in BlockSet: 
+      \E q \in ProcessorSet\{p}: 
+         \/ ProposeTn(p, b)
+         \/ NextRoundTn(p)
+         \/ ReceiveVertexTn(p, q, r, v)
+         \/ AddVertexTn(p, v)
 
 vars == <<blocksToPropose, broadcastNetwork, broadcastRecord, buffer, commitWithRef, dag, decidedWave, leaderReachablity, leaderSeq, round>>
 
@@ -352,15 +398,28 @@ Spec == Init /\ [][Next]_vars
 (* Note that a vertex stores its entire causal history,  *)
 (* thus their causal histories are same.                 *)
 
-DagConsistency == \A p, q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: r # 0 /\ dag[p][r][o] \in VertexSet /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
+DagConsistency == 
+   \A p, q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: 
+      /\ r # 0 
+      /\ dag[p][r][o] \in VertexSet 
+      /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
 
 -----------------------------------------------------------
 
-(* LeaderConsensusConsistancy and                        *)
-(* LeaderConsensusMonotonicity is same as defined in     *)
+(* LeaderConsistency and                        *)
+(* LeaderMonotonicity is same as defined in     *)
 (* LeaderConsensusSpecification                          *)
 
-LeaderConsensusConsistancy == \A p, q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => LeaderConsensus!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+LeaderConsistency == 
+   \A p, q \in ProcessorSet: 
+      decidedWave[p] <= decidedWave[q] => LeaderConsensus!IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
-LeaderConsensusMonotonicity == \A p \in ProcessorSet : LeaderConsensus!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
+LeaderMonotonicity == 
+   \A p \in ProcessorSet: 
+      LeaderConsensus!IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
+
+-----------------------------------------------------------
+
+Safety == Spec => [](DagConsistency /\ LeaderConsistency /\ LeaderMonotonicity)
+
 =============================================================================
