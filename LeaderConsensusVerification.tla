@@ -38,7 +38,6 @@ LEMMA MaxInPlt == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E
       
 LEMMA MaxPropertyPlt == \A E \in SUBSET(WaveSet) : \A x \in E: E # {} => x<=max(E)
 
-
 ---------------------------------------------------------------------------
 
 LEMMA SelfIsPrefixLem == \A S \in Seq(WaveSet) : IsPrefix(S, S) = TRUE
@@ -65,12 +64,11 @@ LEMMA AppendIsPrefixLem == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Ap
            OBVIOUS
       <1> QED BY <1>1, IsPrefixConcat
      
-  
 ---------------------------------------------------------------------------
-   
-LEMMA TypeCorrectnessLem == Spec => []StateType
+
+LEMMA TypeLem == Spec => []StateType
  <1>1 Init => StateType
-      BY DEF Init, StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType
  <1>2 ASSUME StateType, Next
       PROVE StateType'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), UpdateWaveTn(p, w, E)
@@ -105,9 +103,9 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
 
 ---------------------------------------------------------------------------
 
-LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
+LEMMA Invariant1Lem == Spec => []Invariant1
  <1>1 Init => Invariant1
-      BY DEF Init, Invariant1
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant1
  <1>2 StateType /\ StateType' /\ Invariant1 /\ [Next]_vars => Invariant1'
       <2>1 ASSUME StateType, StateType', Next, Invariant1
            PROVE Invariant1'
@@ -148,12 +146,12 @@ LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
            PROVE Invariant1'
            BY <2>2 DEF vars, Invariant1
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
 
-LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
+LEMMA Invariant2Lem == Spec => []Invariant2
  <1>1 Init => Invariant2
-      BY DEF Init, Invariant2
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant2
  <1>2 StateType /\ StateType' /\ Invariant1 /\ Invariant1' /\ Invariant2 /\ [Next]_vars => Invariant2'
       <2>1 ASSUME StateType, StateType', Next, Invariant2, Invariant1, Invariant1'
            PROVE Invariant2'
@@ -202,12 +200,12 @@ LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
            PROVE Invariant2'
            BY <2>2 DEF vars, Invariant2
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant1CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant1Lem, PTL DEF Spec
  
   
-LEMMA Invariant3CorrectnessLem == Spec => []Invariant3
+LEMMA Invariant3Lem == Spec => []Invariant3
  <1>1 Init => Invariant3
-      BY DEF Init, Invariant3
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant3
  <1>2 StateType /\ StateType' /\ Invariant3 /\ [Next]_vars => Invariant3'
       <2>1 ASSUME StateType, StateType', Next, Invariant3
            PROVE Invariant3'
@@ -246,12 +244,12 @@ LEMMA Invariant3CorrectnessLem == Spec => []Invariant3
            PROVE Invariant3'
            BY <2>2 DEF vars, Invariant3
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec      
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec      
 
 
-LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
+LEMMA Invariant4Lem == Spec => []Invariant4
  <1>1 Init => Invariant4
-      BY DEF Init, Invariant4, Contains
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant4, Contains
  <1>2 StateType /\ StateType' /\ Invariant4 /\ [Next]_vars => Invariant4'
       <2>1 ASSUME StateType, StateType', Next, Invariant4
            PROVE Invariant4'
@@ -290,12 +288,12 @@ LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
            PROVE Invariant4'
            BY <2>2 DEF vars, Invariant4
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
  
  
-LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
+LEMMA Invariant5Lem == Spec => []Invariant5
  <1>1 Init => Invariant5
-      BY DEF Init, Invariant5, Contains
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant5, Contains
  <1>2 StateType /\ StateType' /\ Invariant5 /\ [Next]_vars /\ Invariant4 /\ Invariant4' => Invariant5'
       <2>1 ASSUME StateType, StateType', Next, Invariant5, Invariant4, Invariant4'
            PROVE Invariant5'
@@ -350,12 +348,12 @@ LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
            PROVE Invariant5'
            BY <2>2 DEF vars, Invariant5
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant4CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant4Lem, PTL DEF Spec
 
 
-LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
+LEMMA Invariant6Lem == Spec => []Invariant6
  <1>1 Init => Invariant6
-      BY DEF Init, Invariant6
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant6
  <1>2 StateType /\ StateType' /\ Invariant6 /\ [Next]_vars /\ Invariant3 /\ Invariant3' => Invariant6'
       <2>1 ASSUME StateType, StateType', Next, Invariant6, Invariant3, Invariant3'
            PROVE Invariant6'
@@ -400,12 +398,12 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
            PROVE Invariant6'
            BY <2>2 DEF vars, Invariant6
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant3CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant3Lem, PTL DEF Spec
  
 
-LEMMA Invariant7CorrectnessLem == Spec => []Invariant7
+LEMMA Invariant7Lem == Spec => []Invariant7
  <1>1 Init => Invariant7
-      BY DEF Init, Invariant7
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant7
  <1>2 StateType /\ StateType' /\ Invariant7 /\ [Next]_vars /\ Invariant6 /\ Invariant3 => Invariant7'
       <2>1 ASSUME StateType, StateType', Next, Invariant7, Invariant6, Invariant3
            PROVE Invariant7'
@@ -468,12 +466,12 @@ LEMMA Invariant7CorrectnessLem == Spec => []Invariant7
            PROVE Invariant7'
            BY <2>2 DEF vars, Invariant7
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant3CorrectnessLem, Invariant6CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant3Lem, Invariant6Lem, PTL DEF Spec
 
 
-LEMMA Invariant8CorrectnessLem == Spec => []Invariant8
+LEMMA Invariant8Lem == Spec => []Invariant8
  <1>1 Init => Invariant8
-      BY DEF Init, Invariant8
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant8
  <1>2 StateType /\ StateType' /\ Invariant8 /\ [Next]_vars /\ Invariant6' => Invariant8'
       <2>1 ASSUME StateType, StateType', Next, Invariant8, Invariant6'
            PROVE Invariant8'
@@ -525,12 +523,12 @@ LEMMA Invariant8CorrectnessLem == Spec => []Invariant8
            PROVE Invariant8'
            BY <2>2 DEF vars, Invariant8
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant6CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant6Lem, PTL DEF Spec
 
 
-LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
+LEMMA Invariant9Lem == Spec => []Invariant9
  <1>1 Init => Invariant9
-      BY DEF Init, Invariant9
+      BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant9
  <1>2 StateType /\ StateType' /\ Invariant9 /\ [Next]_vars /\ Invariant8 /\ Invariant6 /\ Invariant3 => Invariant9'
       <2>1 ASSUME StateType, StateType', Next, Invariant8, Invariant6, Invariant3, Invariant9
            PROVE Invariant9'
@@ -643,12 +641,12 @@ LEMMA Invariant9CorrectnessLem == Spec => []Invariant9
            PROVE Invariant9'
            BY <2>2 DEF vars, Invariant9
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant8CorrectnessLem, Invariant6CorrectnessLem, Invariant3CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant8Lem, Invariant6Lem, Invariant3Lem, PTL DEF Spec
 
 
-LEMMA Invariant10CorrectnessLem == Spec => []Invariant10
+LEMMA Invariant10Lem == Spec => []Invariant10
  <1>1 Init => Invariant10
-    BY DEF Init, Invariant10
+    BY DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Invariant10
  <1>2 Invariant1 /\ Invariant1' /\ Invariant4 /\ Invariant4' /\ Invariant7 /\ Invariant7' /\ Invariant5 /\ Invariant5'/\ Invariant9 /\ Invariant9' /\ StateType /\ StateType' /\ Invariant10 /\ [Next]_vars => Invariant10'
       <2>1 ASSUME Invariant9, Invariant9', StateType, StateType', Invariant10, [Next]_vars, Invariant1, Invariant1', Invariant4, Invariant4', Invariant7, Invariant7', Invariant5, Invariant5'
            PROVE Invariant10'
@@ -669,17 +667,17 @@ LEMMA Invariant10CorrectnessLem == Spec => []Invariant10
                 <4> QED BY <4>3, <4>4
            <3> QED BY <3>1 DEF Invariant10
       <2> QED BY <2>1     
- <1> QED BY <1>1, <1>2, PTL, TypeCorrectnessLem, Invariant1CorrectnessLem, Invariant4CorrectnessLem, Invariant7CorrectnessLem, Invariant5CorrectnessLem, Invariant9CorrectnessLem DEF Spec             
+ <1> QED BY <1>1, <1>2, PTL, TypeLem, Invariant1Lem, Invariant4Lem, Invariant7Lem, Invariant5Lem, Invariant9Lem DEF Spec             
 
 
 ---------------------------------------------------------------------------
 
-THEOREM LeaderConsensusConsistancyCorrectnessThm == Spec => []LeaderConsensusConsistancy
- <1>1 Init => LeaderConsensusConsistancy
-      BY SelfIsPrefixLem DEF Init, LeaderConsensusConsistancy
- <1>2 StateType /\ StateType' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ LeaderConsensusConsistancy => LeaderConsensusConsistancy'
-      <2>1 ASSUME StateType, StateType', Invariant10, Invariant10', [Next]_vars, LeaderConsensusConsistancy, Invariant1, Invariant1', Invariant2, Invariant2'
-           PROVE LeaderConsensusConsistancy'
+THEOREM ConsistencyThm == Spec => []Consistency
+  <1>1 Init => Consistency
+      BY SelfIsPrefixLem DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Consistency
+ <1>2 StateType /\ StateType' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ Consistency => Consistency'
+      <2>1 ASSUME StateType, StateType', Invariant10, Invariant10', [Next]_vars, Consistency, Invariant1, Invariant1', Invariant2, Invariant2'
+           PROVE Consistency'
            <3>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, decidedWave'[p] <= decidedWave'[q]
                 PROVE IsPrefix(leaderSeq'[p].current, leaderSeq'[q].current)
                 <4>1 CASE decidedWave'[p] = 0 /\ decidedWave'[q] = 0
@@ -699,22 +697,22 @@ THEOREM LeaderConsensusConsistancyCorrectnessThm == Spec => []LeaderConsensusCon
                           BY <2>1, <3>1, <4>3 DEF Invariant1
                      <5> QED BY <5>1, <5>2, <5>3, <2>1, <3>1, <4>3 DEF Invariant10
                 <4> QED BY <3>1, <4>1, <4>2, <4>3, <2>1 DEF StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType, WaveSet
-           <3> QED BY <3>1 DEF LeaderConsensusConsistancy
+           <3> QED BY <3>1 DEF Consistency
       <2> QED BY <2>1
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant10CorrectnessLem, Invariant1CorrectnessLem, Invariant2CorrectnessLem, PTL DEF Spec
+ <1> QED BY  <1>1, <1>2, TypeLem, Invariant10Lem, Invariant1Lem, Invariant2Lem, PTL DEF Spec
 
- 
-THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMonotonicity
- <1>1 Init => LeaderConsensusMonotonicity
-      BY SelfIsPrefixLem DEF Init, LeaderConsensusMonotonicity
- <1>2 StateType /\ StateType' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ LeaderConsensusMonotonicity => LeaderConsensusMonotonicity'
-      <2>1 ASSUME StateType, StateType', Invariant10, Invariant10', Next, LeaderConsensusMonotonicity,  Invariant1, Invariant1', Invariant2, Invariant2'
-           PROVE LeaderConsensusMonotonicity'
+
+THEOREM  MonotonicityThm == Spec => []Monotonicity
+ <1>1 Init => Monotonicity
+      BY SelfIsPrefixLem DEF Init, InitCommitWithRef, InitDecidedWave, InitLeaderReachability, InitLeaderSeq, Monotonicity
+ <1>2 StateType /\ StateType' /\ Invariant10 /\ Invariant10' /\ Invariant1 /\ Invariant1'/\ Invariant2 /\ Invariant2' /\ [Next]_vars /\ Monotonicity => Monotonicity'
+      <2>1 ASSUME StateType, StateType', Invariant10, Invariant10', Next, Monotonicity,  Invariant1, Invariant1', Invariant2, Invariant2'
+           PROVE Monotonicity'
            <3>1 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, NEW E \in SUBSET(WaveSet), UpdateWaveTn(p, w, E)
-                PROVE LeaderConsensusMonotonicity'
-                BY <3>1, <2>1 DEF LeaderConsensusMonotonicity, UpdateWaveTn
+                PROVE Monotonicity'
+                BY <3>1, <2>1 DEF Monotonicity, UpdateWaveTn
            <3>2 ASSUME NEW p \in ProcessorSet, NEW w \in WaveSet, UpdateDecidedWaveTn(p, w)
-                PROVE LeaderConsensusMonotonicity'
+                PROVE Monotonicity'
                 <4>1 ASSUME NEW q \in ProcessorSet
                      PROVE IsPrefix(leaderSeq'[q].last, leaderSeq'[q].current)
                      <5>1 CASE p = q
@@ -738,15 +736,15 @@ THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMo
                      <5>2 CASE p # q
                           <6>1 leaderSeq'[q] = leaderSeq[q]
                                BY <3>2, <4>1, <5>2 DEF UpdateDecidedWaveTn
-                          <6> QED BY <2>1, <6>1 DEF LeaderConsensusMonotonicity, StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType
+                          <6> QED BY <2>1, <6>1 DEF Monotonicity, StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType
                      <5> QED BY <5>1, <5>2    
-                <4> QED BY <4>1 DEF LeaderConsensusMonotonicity
+                <4> QED BY <4>1 DEF Monotonicity
            <3> QED BY <3>1, <3>2, <2>1 DEF Next
-      <2>2 ASSUME UNCHANGED vars, LeaderConsensusMonotonicity
-           PROVE LeaderConsensusMonotonicity'
-           BY <2>2 DEF vars, LeaderConsensusMonotonicity
+      <2>2 ASSUME UNCHANGED vars, Monotonicity
+           PROVE Monotonicity'
+           BY <2>2 DEF vars, Monotonicity
       <2> QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant10CorrectnessLem, Invariant1CorrectnessLem, Invariant2CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant10Lem, Invariant1Lem, Invariant2Lem, PTL DEF Spec
 
 
 =============================================================================

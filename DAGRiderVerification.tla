@@ -50,7 +50,7 @@ LEMMA 0IsRoundPlt == 0 \in RoundSet
 
 -----------------------------------------------------------------------------
 
-LEMMA TypeCorrectnessLem == Spec => []StateType
+LEMMA TypeLem == Spec => []StateType
  <1>1 Init => StateType
       <2>1 0 \in RoundSet
            BY 0IsRoundPlt
@@ -69,7 +69,7 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
                      BY <3>3, NilVertexInNilVertexSetPlt
                 <4> QED BY <4>1, <4>2, <4>3
            <3> QED BY <2>3, <3>3 DEF Init
-      <2> QED BY <2>1, <2>2, <2>3 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+      <2> QED BY <2>1, <2>2, <2>3 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
  <1>2 ASSUME [Next]_vars, StateType
       PROVE StateType'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW v \in VertexSet, Broadcast(p, r, v)
@@ -77,58 +77,58 @@ LEMMA TypeCorrectnessLem == Spec => []StateType
                  /\ broadcastRecord' \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
            <3>1 CASE broadcastRecord[p][r] = FALSE
                 <4>1 [broadcastRecord EXCEPT ![p][r] = TRUE] \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
-                     BY <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                     BY <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType,  LeaderConsensus!StateType
                 <4>2 [q \in ProcessorSet \cup {"History"} |-> broadcastNetwork[q] \cup {[sender |-> p, inRound |-> r, vertex |-> v]}] \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
                      <5>1 [sender |-> p, inRound |-> r, vertex |-> v] \in TaggedVertexSet
                           BY <2>1 DEF TaggedVertexSet
-                     <5> QED BY <2>1, <1>2, <5>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
-                <4> QED BY <4>1, <4>2, <3>1, <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
+                     <5> QED BY <2>1, <1>2, <5>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType,  LeaderConsensus!StateType
+                <4> QED BY <4>1, <4>2, <3>1, <2>1, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, Broadcast
            <3>2 CASE broadcastRecord[p][r] = TRUE
-                BY <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
-           <3> QED BY <3>1, <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, Broadcast
+                BY <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, Broadcast
+           <3> QED BY <3>1, <3>2, <1>2, <2>1 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, Broadcast
       <2>2 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
            PROVE StateType'
            <3>3 blocksToPropose[p] \in Seq(BlockSet)
-                BY  <2>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                BY  <2>2, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
            <3>1  Append(blocksToPropose[p], b) \in Seq(BlockSet)
-                 BY <3>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                 BY <3>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
            <3>2 blocksToPropose' \in [ProcessorSet -> Seq(BlockSet)]
-                BY <3>1, <2>2, <1>2 DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
-           <3> QED BY <3>2, <2>2, <1>2, VertexSetDefPlt DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
+                BY <3>1, <2>2, <1>2 DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
+           <3> QED BY <3>2, <2>2, <1>2, VertexSetDefPlt DEF ProposeTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, TaggedVertexSet
       <2>3 ASSUME NEW p \in ProcessorSet, NextRoundTn(p)
            PROVE StateType'
             <3>1 [round EXCEPT ![p] = round[p]+1] \in [ProcessorSet -> RoundSet]
-                 BY <2>3, <1>2 DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+                 BY <2>3, <1>2 DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
             <3>2 [blocksToPropose EXCEPT ![p] = Tail(blocksToPropose[p])] \in [ProcessorSet -> Seq(BlockSet)]
                  <4>1 blocksToPropose[p] \in Seq(BlockSet) /\ blocksToPropose[p] # <<>>
-                      BY <2>3, <1>2, <2>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NextRoundTn
+                      BY <2>3, <1>2, <2>3 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, NextRoundTn
                  <4>2 Tail(blocksToPropose[p]) \in Seq(BlockSet)
                       BY <4>1, TailTypePlt
-                 <4> QED BY <4>2, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
-            <3> QED BY <3>1, <3>2, <2>3, <1>2, <2>1, VertexSetDefPlt, CreateVertexTypePlt DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
+                 <4> QED BY <4>2, <2>3, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
+            <3> QED BY <3>1, <3>2, <2>3, <1>2, <2>1, VertexSetDefPlt, CreateVertexTypePlt DEF NextRoundTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, TaggedVertexSet
       <2>4 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, NEW r \in RoundSet, NEW q \in ProcessorSet, p # q, ReceiveVertexTn(p, q, r, v)
            PROVE StateType'
            <3>1 buffer' \in [ProcessorSet -> SUBSET(VertexSet)]
-                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
+                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, ReceiveVertexTn
            <3>2 broadcastNetwork' \in [ProcessorSet \cup {"History"} ->SUBSET(TaggedVertexSet)]
-                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ReceiveVertexTn
-           <3> QED BY <3>1, <3>2, <2>4, <1>2, <2>1, VertexSetDefPlt DEF ReceiveVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
+                BY <2>4, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType,  LeaderConsensus!StateType, ReceiveVertexTn
+           <3> QED BY <3>1, <3>2, <2>4, <1>2, <2>1, VertexSetDefPlt DEF ReceiveVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType,  LeaderConsensus!StateType, TaggedVertexSet
       <2>5 ASSUME NEW p \in ProcessorSet, NEW v \in VertexSet, AddVertexTn(p, v)
            PROVE StateType'
            <3>1 dag' \in [ProcessorSet -> [RoundSet -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
                 <4>1 v.round \in RoundSet /\ v.source \in ProcessorSet \*/\ v.source \in ProcessorSet
                      BY VertexTypePlt, <2>5
                 <4>2 dag' = [dag EXCEPT ![p][v.round][v.source] = v]
-                     BY <2>5, <1>2  DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
-                <4> QED BY <4>1, <4>2, <2>5, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
-           <3> QED BY <3>1, <2>5, <1>2, VertexSetDefPlt DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, TaggedVertexSet
+                     BY <2>5, <1>2  DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
+                <4> QED BY <4>1, <4>2, <2>5, <1>2 DEF StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
+           <3> QED BY <3>1, <2>5, <1>2, VertexSetDefPlt DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType, TaggedVertexSet
       <2>6 CASE UNCHANGED vars
-           BY <2>6, <2>1, <1>2, VertexSetDefPlt DEF vars, TaggedVertexSet, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
+           BY <2>6, <2>1, <1>2, VertexSetDefPlt DEF vars, TaggedVertexSet, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
       <2> QED  BY <2>2, <2>3, <2>4, <2>5, <2>6, <1>2 DEF Next
  <1> QED BY <1>1, <1>2, PTL DEF Spec
 
 
-LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
+LEMMA Invariant1Lem == Spec => []Invariant1
  <1>1 Init => Invariant1
       <2>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, NEW r \in RoundSet, r # 0, Init
            PROVE dag[p][r][q] \notin VertexSet
@@ -173,10 +173,10 @@ LEMMA Invariant1CorrectnessLem == Spec => []Invariant1
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant1, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
 
-LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
+LEMMA Invariant2Lem == Spec => []Invariant2
  <1>1 Init => Invariant2
       BY DEF Init, Invariant2
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant2
@@ -235,10 +235,10 @@ LEMMA Invariant2CorrectnessLem == Spec => []Invariant2
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant2, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
 
-LEMMA Invariant3CorrectnessLem == Spec => []Invariant3
+LEMMA Invariant3Lem == Spec => []Invariant3
  <1>1 Init => Invariant3
       BY DEF Init, Invariant3
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant3
@@ -264,10 +264,10 @@ LEMMA Invariant3CorrectnessLem == Spec => []Invariant3
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant3, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
 
-LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
+LEMMA Invariant4Lem == Spec => []Invariant4
  <1>1 Init => Invariant4
       BY DEF Init, Invariant4
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant4, Invariant3
@@ -310,10 +310,10 @@ LEMMA Invariant4CorrectnessLem == Spec => []Invariant4
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant4, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant3CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant3Lem, PTL DEF Spec
 
 
-LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
+LEMMA Invariant5Lem == Spec => []Invariant5
  <1>1 Init => Invariant5
       BY DEF Init, Invariant5
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant5, Invariant2
@@ -363,10 +363,10 @@ LEMMA Invariant5CorrectnessLem == Spec => []Invariant5
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant5, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, Invariant2CorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, Invariant2Lem, PTL DEF Spec
 
 
-LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
+LEMMA Invariant6Lem == Spec => []Invariant6
  <1>1 StateType /\ Init => Invariant6
       <2>1 ASSUME NEW q \in ProcessorSet, NEW t \in ProcessorSet, NEW r \in RoundSet, Init, StateType
            PROVE dag[q][r][t].source = t /\ dag[q][r][t].round = r
@@ -412,12 +412,12 @@ LEMMA Invariant6CorrectnessLem == Spec => []Invariant6
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF Invariant6, vars, VertexSet
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, TypeCorrectnessLem, PTL DEF Spec
+ <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
 
 -----------------------------------------------------------------------------
 
-THEOREM DagConsistencyCorrectnessThm == Spec => []DagConsistency
+THEOREM DagConsistencyThm == Spec => []DagConsistency
  <1>1 Init => DagConsistency
      BY DEF Init, DagConsistency
  <1>2 Invariant1' /\ Invariant4' /\ Invariant6' /\ Invariant5' /\ DagConsistency /\ [Next]_vars => DagConsistency'
@@ -444,7 +444,7 @@ THEOREM DagConsistencyCorrectnessThm == Spec => []DagConsistency
     <2>2 DagConsistency' = \A a, b \in ProcessorSet, z \in RoundSet, o \in ProcessorSet: z # 0 /\ dag'[a][z][o] \in VertexSet /\ dag'[b][z][o] \in VertexSet => dag'[a][z][o] = dag'[b][z][o]
          BY VertexSetDefPlt DEF DagConsistency
     <2>3 QED BY <2>1, <2>2
- <1> QED BY <1>1, <1>2, PTL, Invariant1CorrectnessLem, Invariant4CorrectnessLem, Invariant5CorrectnessLem, Invariant6CorrectnessLem DEF Spec
+ <1> QED BY <1>1, <1>2, PTL, Invariant1Lem, Invariant4Lem, Invariant5Lem, Invariant6Lem DEF Spec
 
 
 -----------------------------------------------------------------------------
@@ -455,7 +455,7 @@ LEMMA UnchangedDefLem == WaveSet = LeaderConsensus!WaveSet /\ ProcessorSet = Lea
 
 -----------------------------------------------------------------------------
 
-LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
+LEMMA SpecLem == Spec => LeaderConsensus!Spec
  <1>1 Init => LeaderConsensus!Init
     BY DEF Init
  <1>2 ASSUME StateType, [Next]_vars
@@ -492,21 +492,21 @@ LEMMA SpecCorrectnessLem == Spec => LeaderConsensus!Spec
       <2>5 CASE UNCHANGED vars
            BY <2>5 DEF vars, LeaderConsensus!vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
- <1> QED BY <1>1, <1>2, PTL, TypeCorrectnessLem DEF Spec, LeaderConsensus!Spec
+ <1> QED BY <1>1, <1>2, PTL, TypeLem DEF Spec, LeaderConsensus!Spec
 
 
 -----------------------------------------------------------------------------
 
-THEOREM SystemTypeCorrectnessLem == Spec => []ComposedStateType
-  BY TypeCorrectnessLem, PTL, LeaderConsensus!TypeCorrectnessLem, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm DEF ComposedStateType
+THEOREM SystemTypeLem == Spec => []StateType
+  BY TypeLem, PTL, LeaderConsensus!TypeLem, SpecLem, NumWaveAsm, NumProcessorAsm DEF StateType
 
 
 -----------------------------------------------------------------------------
 
-THEOREM LeaderConsensusConsistancyCorrectnessThm == Spec=> []LeaderConsensusConsistancy
-  BY LeaderConsensus!LeaderConsensusConsistancyCorrectnessThm, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!LeaderConsensusConsistancy, LeaderConsensusConsistancy
+THEOREM LeaderConsensusConsistencyThm == Spec=> []LeaderConsistency
+  BY LeaderConsensus!ConsistencyThm, SpecLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!Consistency, LeaderConsistency
 
-THEOREM LeaderConsensusMonotonicityCorrectnessThm == Spec => []LeaderConsensusMonotonicity
-  BY LeaderConsensus!LeaderConsensusMonotonicityCorrectnessThm, SpecCorrectnessLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!LeaderConsensusMonotonicity, LeaderConsensusMonotonicity
+THEOREM LeaderConsensusMonotonicityThm == Spec => []LeaderMonotonicity
+  BY LeaderConsensus!MonotonicityThm, SpecLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!Monotonicity, LeaderMonotonicity
 
 =============================================================================
