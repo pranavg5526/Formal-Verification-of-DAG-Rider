@@ -366,7 +366,6 @@ StateType ==
    /\ BufferType
    /\ DagType
    /\ RoundType
-   /\ LeaderConsensus!StateType
 
 Init == 
    /\ InitBlocksToPropose
@@ -400,15 +399,15 @@ Spec == Init /\ [][Next]_vars
 
 DagConsistency == 
    \A p, q \in ProcessorSet, r \in RoundSet, o \in ProcessorSet: 
-      /\ r # 0 
+     (/\ r # 0 
       /\ dag[p][r][o] \in VertexSet 
-      /\ dag[q][r][o] \in VertexSet => dag[p][r][o] = dag[q][r][o]
+      /\ dag[q][r][o] \in VertexSet ) => dag[p][r][o] = dag[q][r][o]
 
 -----------------------------------------------------------
 
-(* LeaderConsistency and                        *)
-(* LeaderMonotonicity is same as defined in     *)
-(* LeaderConsensusSpecification                          *)
+(* LeaderConsistency and                                *)
+(* LeaderMonotonicity is same as defined in             *)
+(* LeaderConsensusSpecification                         *)
 
 LeaderConsistency == 
    \A p, q \in ProcessorSet: 
