@@ -66,7 +66,7 @@ CONSTANT ChooseLeader(_)
 (* Since we have bounded the number waves, there is a    *)
 (* finite set (VertexSet) of vertices which can be       *)
 (* created by the participating processes. To define     *)
-(* VertexSet we first define DummyVertexSet              *)
+(* VertexSet we first define ZeroRoundVertexSet              *)
 (* (set of dummy vertices in round 0 of the DAG), we     *)
 (* then define InRoundVertex(r) (set of vertices which   *)
 (* can be created in round r). Finally we define         *)
@@ -77,17 +77,17 @@ CONSTANT ChooseLeader(_)
 (* it is defined stores entire causal history of the     *)
 (* node.                                                 *)
 
-DummyVertex(p) == 
+ZeroRoundVertex(p) == 
    [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
 
-DummyVertexSet == 
-   {DummyVertex(p) : p \in ProcessorSet}
+ZeroRoundVertexSet == 
+   {ZeroRoundVertex(p) : p \in ProcessorSet}
 
 RECURSIVE InRoundVertex(_)
 
 InRoundVertex(r) == 
    IF r = 0
-   THEN DummyVertexSet
+   THEN ZeroRoundVertexSet
    ELSE [round : {r}, source : ProcessorSet, Block : BlockSet, Neighbours : SUBSET(InRoundVertex(r-1))]
 
 RECURSIVE UntilRoundVertex(_)
@@ -198,7 +198,7 @@ DagType ==
    dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
 
 InitDag == 
-   dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)]]]
+   dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN ZeroRoundVertex(q) ELSE NilVertex(q, r)]]]
 
 -----------------------------------------------------------
 
