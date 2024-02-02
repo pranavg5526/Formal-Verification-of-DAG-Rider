@@ -62,14 +62,14 @@ LEMMA TypeLem == Spec => []StateType
            <3>3 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW q \in ProcessorSet
                 PROVE  dag[p][r][q] \in VertexSet \cup NilVertexSet
                 <4>1 dag[p][r][q] =  IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)
-                     BY <3>3, <2>3 DEF Init
+                     BY <3>3, <2>3 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound
                 <4>2 DummyVertex(q) \in VertexSet
                      BY <3>3, DummyVertexInVertexSetPlt
                 <4>3 NilVertex(q, r) \in NilVertexSet
                      BY <3>3, NilVertexInNilVertexSetPlt
                 <4> QED BY <4>1, <4>2, <4>3
-           <3> QED BY <2>3, <3>3 DEF Init
-      <2> QED BY <2>1, <2>2, <2>3 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
+           <3> QED BY <2>3, <3>3 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound
+      <2> QED BY <2>1, <2>2, <2>3 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, LeaderConsensus!StateType
  <1>2 ASSUME [Next]_vars, StateType
       PROVE StateType'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet, NEW v \in VertexSet, Broadcast(p, r, v)
@@ -133,7 +133,7 @@ LEMMA Invariant1Lem == Spec => []Invariant1
       <2>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, NEW r \in RoundSet, r # 0, Init
            PROVE dag[p][r][q] \notin VertexSet
            <3>1 dag[p][r][q] = NilVertex(q, r)
-                BY <2>1 DEF Init
+                BY <2>1 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound
            <3> QED BY <3>1, NilVertexNotInVertexSetPlt
       <2> QED BY <2>1 DEF Invariant1
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant1
@@ -178,7 +178,7 @@ LEMMA Invariant1Lem == Spec => []Invariant1
 
 LEMMA Invariant2Lem == Spec => []Invariant2
  <1>1 Init => Invariant2
-      BY DEF Init, Invariant2
+      BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, Invariant2
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant2
       PROVE Invariant2'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
@@ -240,7 +240,7 @@ LEMMA Invariant2Lem == Spec => []Invariant2
 
 LEMMA Invariant3Lem == Spec => []Invariant3
  <1>1 Init => Invariant3
-      BY DEF Init, Invariant3
+      BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, Invariant3
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant3
       PROVE Invariant3'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
@@ -269,7 +269,7 @@ LEMMA Invariant3Lem == Spec => []Invariant3
 
 LEMMA Invariant4Lem == Spec => []Invariant4
  <1>1 Init => Invariant4
-      BY DEF Init, Invariant4
+      BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, Invariant4
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant4, Invariant3
       PROVE Invariant4'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
@@ -315,7 +315,7 @@ LEMMA Invariant4Lem == Spec => []Invariant4
 
 LEMMA Invariant5Lem == Spec => []Invariant5
  <1>1 Init => Invariant5
-      BY DEF Init, Invariant5
+      BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, Invariant5
  <1>2 ASSUME [Next]_vars, StateType, StateType', Invariant5, Invariant2
       PROVE Invariant5'
       <2>1 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
@@ -372,13 +372,13 @@ LEMMA Invariant6Lem == Spec => []Invariant6
            PROVE dag[q][r][t].source = t /\ dag[q][r][t].round = r
            <3>1 CASE r = 0
                 <4>1 dag[q][r][t] = [round |-> r, source |-> t, block |-> "Empty", edges |-> {}]
-                      BY <3>1, <2>1 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, DummyVertex
+                      BY <3>1, <2>1 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, DummyVertex
                 <4>2 [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
            <3>2 CASE r # 0
                 <4>1  dag[q][r][t] = [round |-> r, source |-> t, block |-> "Nil", edges |-> {}]
-                      BY <3>2, <2>1 DEF Init, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NilVertex
+                      BY <3>2, <2>1 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NilVertex
                 <4>2 [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
@@ -419,7 +419,7 @@ LEMMA Invariant6Lem == Spec => []Invariant6
 
 THEOREM DagConsistencyThm == Spec => []DagConsistency
  <1>1 Init => DagConsistency
-     BY DEF Init, DagConsistency
+     BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, DagConsistency
  <1>2 Invariant1' /\ Invariant4' /\ Invariant6' /\ Invariant5' /\ DagConsistency /\ [Next]_vars => DagConsistency'
     <2> SUFFICES ASSUME DagConsistency, [Next]_vars, Invariant1', Invariant4', Invariant6', Invariant5'
                   PROVE DagConsistency'
@@ -457,7 +457,7 @@ LEMMA UnchangedDefLem == WaveSet = LeaderConsensus!WaveSet /\ ProcessorSet = Lea
 
 LEMMA SpecLem == Spec => LeaderConsensus!Spec
  <1>1 Init => LeaderConsensus!Init
-    BY DEF Init
+    BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound
  <1>2 ASSUME StateType, [Next]_vars
       PROVE LeaderConsensus!Next \/ UNCHANGED LeaderConsensus!vars
       <2>1 ASSUME NEW p \in ProcessorSet, NEW b \in BlockSet, ProposeTn(p, b)
@@ -499,7 +499,6 @@ LEMMA SpecLem == Spec => LeaderConsensus!Spec
 
 THEOREM SystemTypeLem == Spec => []StateType
   BY TypeLem, PTL, LeaderConsensus!TypeLem, SpecLem, NumWaveAsm, NumProcessorAsm DEF StateType
-
 
 -----------------------------------------------------------------------------
 
