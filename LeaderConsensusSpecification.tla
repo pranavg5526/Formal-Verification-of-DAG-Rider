@@ -41,9 +41,11 @@ WaveSet == 1..NumWaves
 
 VARIABLES commitWithRef
 
-CommitWithRefType == commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
+CommitWithRefType == 
+   commitWithRef \in [ProcessorSet -> [WaveSet -> Seq(WaveSet)]]
 
-InitCommitWithRef == commitWithRef = [p \in ProcessorSet |-> [w \in WaveSet |-> <<>>]]
+InitCommitWithRef == 
+   commitWithRef = [p \in ProcessorSet |-> [w \in WaveSet |-> <<>>]]
 
 ------------------------------
 
@@ -51,9 +53,11 @@ InitCommitWithRef == commitWithRef = [p \in ProcessorSet |-> [w \in WaveSet |-> 
 
 VARIABLES decidedWave
 
-DecidedWaveType == decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
+DecidedWaveType == 
+   decidedWave \in [ProcessorSet -> WaveSet \cup {0}]
 
-InitDecidedWave == decidedWave = [p \in ProcessorSet |-> 0]
+InitDecidedWave == 
+   decidedWave = [p \in ProcessorSet |-> 0]
 
 ------------------------------
 
@@ -64,9 +68,11 @@ InitDecidedWave == decidedWave = [p \in ProcessorSet |-> 0]
 
 VARIABLES leaderReachablity
 
-LeaderReachabilityType == leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
+LeaderReachabilityType == 
+   leaderReachablity \in [ProcessorSet -> [WaveSet -> [exists : BOOLEAN, edges : SUBSET(WaveSet)]]]
 
-InitLeaderReachability == leaderReachablity = [p \in ProcessorSet |-> [w \in WaveSet |->[exists |-> FALSE, edges |-> {}]]]
+InitLeaderReachability == 
+   leaderReachablity = [p \in ProcessorSet |-> [w \in WaveSet |->[exists |-> FALSE, edges |-> {}]]]
 
 ------------------------------
 
@@ -76,9 +82,11 @@ InitLeaderReachability == leaderReachablity = [p \in ProcessorSet |-> [w \in Wav
 
 VARIABLES leaderSeq
 
-LeaderSeqType == leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
+LeaderSeqType == 
+   leaderSeq \in [ProcessorSet -> [current : Seq(WaveSet), last : Seq(WaveSet)]]
 
-InitLeaderSeq == leaderSeq = [p \in ProcessorSet |-> [current |-> <<>>, last |-> <<>>]]
+InitLeaderSeq == 
+   leaderSeq = [p \in ProcessorSet |-> [current |-> <<>>, last |-> <<>>]]
 
 ----------------------------------------------------------------------------
 (*------------------------STATE-TRANSITIONS------------------------------*)
@@ -109,14 +117,19 @@ InitLeaderSeq == leaderSeq = [p \in ProcessorSet |-> [current |-> <<>>, last |->
 (* leaderSeq remain unchanged during this execution.                     *)
                                                                         
 
-max(E) == IF E # {} /\ Cardinality(E) \in Nat THEN CHOOSE x \in E : \A y \in E : y <= x ELSE "Error"
+max(E) == 
+   IF E # {} /\ Cardinality(E) \in Nat 
+   THEN CHOOSE x \in E : \A y \in E : y <= x 
+   ELSE "Error"
 
 UpdateWaveTn(p, w, E) ==   
    /\ leaderReachablity[p][w].exists = FALSE
    /\ \A x \in E : leaderReachablity[p][x].exists = TRUE
    /\ \A x \in E : x < w
-   /\ \A q \in ProcessorSet : leaderReachablity[q][w].exists = TRUE => leaderReachablity[q][w].edges = E
-   /\ \A q \in ProcessorSet : decidedWave[q] # 0 /\ decidedWave[q] < w => decidedWave[q] \in E
+   /\ \A q \in ProcessorSet: 
+      leaderReachablity[q][w].exists = TRUE => leaderReachablity[q][w].edges = E
+   /\ \A q \in ProcessorSet: 
+      decidedWave[q] # 0 /\ decidedWave[q] < w => decidedWave[q] \in E
    /\ commitWithRef' = [commitWithRef EXCEPT ![p][w] = IF E = {} THEN <<w>> ELSE Append(commitWithRef[p][max(E)], w)]
    /\ leaderReachablity' = [leaderReachablity EXCEPT ![p][w] = [exists |-> TRUE, edges |-> E]]
    /\ UNCHANGED <<decidedWave, leaderSeq>>
@@ -152,7 +165,8 @@ UpdateDecidedWaveTn(p, w) ==
    /\ leaderReachablity[p][w].exists = TRUE
    /\ w >= decidedWave[p]
    /\ \A x \in WaveSet : x > w => leaderReachablity[p][x].exists = FALSE 
-   /\ \A q \in ProcessorSet, x \in WaveSet : x > w /\ leaderReachablity[q][x].exists = TRUE => w \in leaderReachablity[q][x].edges
+   /\ \A q \in ProcessorSet, x \in WaveSet:  
+      x > w  /\ leaderReachablity[q][x].exists = TRUE => w \in leaderReachablity[q][x].edges
    /\ decidedWave' = [decidedWave EXCEPT ![p] = w]
    /\ leaderSeq' = [leaderSeq EXCEPT ![p] = [current |-> commitWithRef[p][w], last |-> leaderSeq[p].current]]
    /\ UNCHANGED <<commitWithRef, leaderReachablity>>
@@ -177,7 +191,9 @@ Init ==
    /\ InitLeaderReachability
    /\ InitLeaderSeq
         
-Next == \E p \in ProcessorSet, w \in WaveSet, E \in SUBSET(WaveSet) : UpdateWaveTn(p, w, E) \/ UpdateDecidedWaveTn(p, w)
+Next == 
+   \E p \in ProcessorSet, w \in WaveSet, E \in SUBSET(WaveSet): 
+      UpdateWaveTn(p, w, E) \/ UpdateDecidedWaveTn(p, w)
 
 vars == <<commitWithRef, decidedWave, leaderReachablity, leaderSeq>>
 
@@ -191,7 +207,9 @@ Spec == Init /\ [][Next]_vars
 (* order in which waves are committed so far wont be altered in future   *)
 (* with a new decided wave.                                              *)
 
-Monotonicity == \A p \in ProcessorSet : IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
+Monotonicity == 
+   \A p \in ProcessorSet: 
+      IsPrefix(leaderSeq[p].last, leaderSeq[p].current)
 
 ------------------------------
 
@@ -199,7 +217,9 @@ Monotonicity == \A p \in ProcessorSet : IsPrefix(leaderSeq[p].last, leaderSeq[p]
 (* Consistency states that eventually all the processes                  *)
 (* commit the same waves and in the same order.                          *)
 
-Consistency == \A p, q \in ProcessorSet : decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
+Consistency == 
+   \A p, q \in ProcessorSet: 
+      decidedWave[p] <= decidedWave[q] => IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
 ------------------------------
 

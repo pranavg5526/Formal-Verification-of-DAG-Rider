@@ -77,9 +77,11 @@ CONSTANT ChooseLeader(_)
 (* it is defined stores entire causal history of the     *)
 (* node.                                                 *)
 
-DummyVertex(p) == [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
+DummyVertex(p) == 
+   [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
 
-DummyVertexSet == {DummyVertex(p) : p \in ProcessorSet}
+DummyVertexSet == 
+   {DummyVertex(p) : p \in ProcessorSet}
 
 RECURSIVE InRoundVertex(_)
 
@@ -104,7 +106,8 @@ VertexSet == UntilRoundVertex(4*NumWaves)
 (* sent. TaggedVertexSet is set of all such tagged       *)
 (* vertices                                              *)
 
-TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
+TaggedVertexSet == 
+   [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
 
 -----------------------------------------------------------
 
@@ -117,9 +120,11 @@ TaggedVertexSet == [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSe
 (* We define NilVertexSet as the set of all nil          *)
 (* vertices.                                             *)
 
-NilVertex(p, r) == [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
+NilVertex(p, r) == 
+   [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
 
-NilVertexSet == {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
+NilVertexSet == 
+   {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
 
 ----------------------------------------------------------------------------
 (*--------------------------STATE-VARIABLES--------------------------------*)
@@ -187,7 +192,8 @@ InitBuffer ==
 
 VARIABLE dag
 
-DagType == dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
+DagType == 
+   dag \in [ProcessorSet -> [RoundSet  -> [ProcessorSet -> VertexSet \cup NilVertexSet]]]
 
 InitDag == 
    dag = [p \in ProcessorSet |-> [r \in RoundSet  |-> [q \in ProcessorSet |-> IF r = 0 THEN DummyVertex(q) ELSE NilVertex(q, r)]]]
