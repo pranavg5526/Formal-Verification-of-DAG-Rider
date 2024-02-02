@@ -166,7 +166,8 @@ InitBroadcastNetwork ==
 
 VARIABLE broadcastRecord
 
-BroadcastRecordType == broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
+BroadcastRecordType == 
+   broadcastRecord \in [ProcessorSet -> [RoundSet -> BOOLEAN]]
 
 InitBroadcastRecord == 
    broadcastRecord = [p \in ProcessorSet |-> [ r \in RoundSet |-> IF r = 0 THEN TRUE ELSE FALSE ]]
@@ -178,7 +179,8 @@ InitBroadcastRecord ==
 
 VARIABLE buffer
 
-BufferType == buffer \in [ProcessorSet -> SUBSET(VertexSet)]
+BufferType == 
+   buffer \in [ProcessorSet -> SUBSET(VertexSet)]
 
 InitBuffer ==
    buffer = [p \in ProcessorSet |-> {}]
@@ -205,7 +207,8 @@ InitDag ==
 
 VARIABLE round
 
-RoundType == round \in [ProcessorSet -> RoundSet]
+RoundType == 
+   round \in [ProcessorSet -> RoundSet]
 
 InitRound == 
    round = [p \in ProcessorSet |-> 0]
