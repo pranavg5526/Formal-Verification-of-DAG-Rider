@@ -1,5 +1,5 @@
 (* The DAG-Rider Specification defines a state transition system  for the  *)
-(* DAG-Rider protocol, and its safety protperties. The article for the     *)
+(* DAG-Rider protocol, and its safety properties. The article for the      *)
 (* protocol can be found here:   https://arxiv.org/abs/2102.08325          *)
 
 ------------------------ MODULE DAGRiderSpecification -----------------------
@@ -17,7 +17,7 @@ EXTENDS FiniteSets,
 (* NumProcessors is the number of participating processes in the protocol. *)
 (* We assume this is non zero. We number processes 1 to NumProcessors.     *)
 (* and define ProcessorSet as the set of participating processes.          *) 
-(* We define maximum allowed process failurs (NumFaultyProcessors) as the  *)
+(* We define maximum allowed process failures (NumFaultyProcessors) as the *)
 (* greatest integer less than one third of the total number of processes.  *)
 
 CONSTANT NumProcessors
@@ -113,7 +113,7 @@ TaggedVertexSet ==
 
 -----------------------------------------------------------------------------
 
-(* NilVertex(p, r) is a vertex which represet the non-existence of a mes-  *)
+(* NilVertex(p, r) is a vertex which represents the non-existence of a mes-*)
 (* sage and whose block is Nil. To make the DAG more expressive we assume  *)
 (* that DAG of every process has a vertex in every round created by every  *)
 (*  process. In practice, a process q might not have added a vertex created*)
@@ -131,7 +131,7 @@ NilVertexSet ==
 (*--------------------------STATE-VARIABLES--------------------------------*)
 
 (* For every process p, blocksToPropose stores a sequence of blocks that   *)
-(* are proposed but not yet initialiseed to order (blocks whose vertex is  *)
+(* are proposed but not yet initialized to order (blocks whose vertex is  *)
 (* not yet created by the process).                                        *)
 
 VARIABLE blocksToPropose
@@ -145,7 +145,7 @@ InitBlocksToPropose ==
 -----------------------------------------------------------------------------
 
 (* For every process p, broadcastNetwork stores set of  TaggedVertices that*)
-(* are broadcasted but not yet received by p. Addtionally it also stores   *)
+(* are broadcasted but not yet received by p. Additionally it also stores  *)
 (* history of all the TaggedVertices ever broadcasted on the network.      *)
 
 VARIABLE broadcastNetwork
@@ -278,7 +278,7 @@ ProposeTn(p, b) ==
 (* Transition NextRoundTn(p) encodes process p moving to the next round of *)
 (* DAG construction.  Upon completion of the current round process p moves *)
 (* to the next round by creating (CreateVertex) and broadcasting Broadcast *)
-(* a new vertex. Additionally, when next round leads to a new  wave it trys*)
+(* a new vertex. Additionally, when next round leads to a new wave it tries*)
 (* to decide the current wave (ReadyWave), if decide condition is satisfied*)
 (* it takes UpdateDecidedWaveTn in LeaderConsensus.                        *)
 
