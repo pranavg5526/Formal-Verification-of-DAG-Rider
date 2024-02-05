@@ -70,35 +70,32 @@ CONSTANT ChooseLeader(_)
 (* Since we have bounded the number waves, there is a finite set off vert- *)
 (* ices (VertexSet), which can be created by the participating processes.  *)
 (* To define VertexSet, we first define ZeroRoundVertexSet (i.e.,a set of  *)
-(* dummy vertices in round 0 of the DAG). Second, we define set InRound-   *)
-(* Vertex(r) (set of vertices which can be created in round r). Third, we  *)
-(* define UntilRoundVertex(r), which is set of vertices till round r.      *)
-(* It is important to note that a vertex as defined in DAG-rider is not a  *)
-(* vertex but a rooted DAG (aka. downset). The downset stores the entire   *)
-(* causal history of the node.                                             *) 
+(* dummy vertices in round 0 of the DAG). Then, we define set              *)
+(* UntilRoundVertex(r), which is set of vertices till round r. It is       *)
+(* important to note that a vertex as defined in DAG-rider is not a vertex *)
+(* but a rooted DAG (aka. downset). The downset stores the entire causal   *)
+(* history of the node.                                                    *) 
 
 ZeroRoundVertex(p) == 
-   [round |-> 0, source |-> p, block |-> "Empty", edges |-> {}]
+   [round |-> 0, 
+    source |-> p, 
+    block |-> "Empty", 
+    strongedges |-> {}, 
+    weakedges |-> {}]
 
 ZeroRoundVertexSet == 
    {ZeroRoundVertex(p) : p \in ProcessorSet}
 
-RECURSIVE InRoundVertex(_)
-
-InRoundVertex(r) == 
-   IF r = 0
-   THEN ZeroRoundVertexSet
-   ELSE [round : {r}, 
-         source : ProcessorSet, 
-         Block : BlockSet, 
-         Neighbours : SUBSET(InRoundVertex(r-1))]
-
 RECURSIVE UntilRoundVertex(_)
 
 UntilRoundVertex(r) == 
-   IF r = 0
-   THEN InRoundVertex(r)
-   ELSE InRoundVertex(r) \cup UntilRoundVertex(r-1)
+  IF r = 0
+  THEN ZeroRoundVertexSet
+  ELSE UntilRoundVertex(r-1) \cup [round : {r}, 
+                                   source : ProcessorSet, 
+                                   block : BlockSet, 
+                                   strongedges : SUBSET(UntilRoundVertex(r-1)),
+                                   weakedges : SUBSET(UntilRoundVertex(r-1))]  
 
 VertexSet == UntilRoundVertex(4*NumWaves)
 
@@ -121,7 +118,11 @@ TaggedVertexSet ==
 (* Vertex(p, r).  We define NilVertexSet as the set of all nil vertices.   *)
 
 NilVertex(p, r) == 
-   [round |-> r, source |-> p, block |-> "Nil", edges |-> {}]
+   [round |-> r,
+    source |-> p,
+    block |-> "Nil",
+    strongedges |-> {},
+    weakedges |-> {}]
 
 NilVertexSet == 
    {NilVertex(p, r) : p \in ProcessorSet, r \in RoundSet}
@@ -245,8 +246,15 @@ LeaderConsensus ==
 (* Before defining transitions we define some useful functions:            *)
 (*  (1) Path(u, v): Boolean function that returns true if v is in causal   *)
 (*      history of u.                                                      *)
-(*  (2) AddedVertices(p, r): Function on a system state. Returns added     *)
+(*  (2) StrongPath(u, v): Boolean function that returns true if v is in    *)
+(*      strong causal history of u.                                        *)
+(*  (3) InAddedVertex(p, r): Function on a system state. Returns added     *)
 (*      vertices in round r of p's current DAG.                            *)
+(*  (4) UntilAddedVertex(p, r): Function on a system state. Returns added  *)
+(*      till round r of p's current DAG.                                   *)
+(*  (5) NoPathVertices(p, r): Function on a system state. Returns set of   *)
+(*      added vertices till round r of p's current DAG, which do not have  *)
+(*      path from any of the added vertex in round r.                      *)
 (*  (3) WaveLeader(p, w): Function on a system state. Returns p's leader   *)
 (*      vertex of wave w.                                                  *)
 
@@ -256,10 +264,28 @@ Path(u, v) ==
    THEN TRUE
    ELSE IF u.round = 0
         THEN FALSE
-        ELSE \E x \in u.edges : Path(x, v)
+        ELSE \E x \in u.weakedges \cup u.strongedges : Path(x, v)
 
-AddedVertices(p, r) == 
+RECURSIVE StrongPath(_, _)
+StrongPath(u, v) == 
+   IF u = v
+   THEN TRUE
+   ELSE IF u.round = 0
+        THEN FALSE
+        ELSE \E x \in u.strongedges : StrongPath(x, v)
+
+InAddedVertex(p, r) == 
    {v \in VertexSet : v.round = r /\ dag[p][r][v.source] = v}
+
+RECURSIVE UntilAddedVertex(_, _)
+
+UntilAddedVertex(p, r) == 
+   IF r = 0 
+   THEN InAddedVertex(p, r)
+   ELSE InAddedVertex(p, r) \cup UntilAddedVertex(p, r-1)
+
+NoPathVertices(p, r) == {v \in UntilAddedVertex(p, r) : 
+                         (\A w \in InAddedVertex(p, r) : ~Path(w,v))}                         
 
 WaveLeader(p, w) == dag[p][4*w-3][ChooseLeader(w)]
 
@@ -286,7 +312,8 @@ CreateVertex(p, r) ==
    [round |-> r, 
     source |-> p, 
     block |-> Head(blocksToPropose[p]), 
-    edges |-> AddedVertices(p, r-1)]
+    strongedges |-> InAddedVertex(p, r-1),
+    weakedges |-> NoPathVertices(p, r-1)]
 
 Broadcast(p, r, v) == 
    IF broadcastRecord[p][r] = FALSE
@@ -298,15 +325,15 @@ Broadcast(p, r, v) ==
 
 ReadyWave(p, w) == 
    IF ( /\ dag[p][4*w-3][WaveLeader(p, w)] \in VertexSet 
-        /\ \E Q \in SUBSET(AddedVertices(p, 4*w)):
+        /\ \E Q \in SUBSET(InAddedVertex(p, 4*w)):
               /\ Cardinality(Q) > 2*NumFaultyProcessors 
-              /\ \A u \in Q : Path(u, WaveLeader(p, w)) )
+              /\ \A u \in Q : StrongPath(u, WaveLeader(p, w)) )
    THEN LeaderConsensus!UpdateDecidedWaveTn(p, w)
    ELSE UNCHANGED LeaderConsensus!vars
 
 NextRoundTn(p) ==  
    /\ round[p]+1 \in RoundSet
-   /\ Cardinality(AddedVertices(p, round[p])) > 2*NumFaultyProcessors
+   /\ Cardinality(InAddedVertex(p, round[p])) > 2*NumFaultyProcessors
    /\ blocksToPropose[p] # <<>>
    /\ Broadcast(p, round[p]+1, CreateVertex(p, round[p]+1))
    /\ round' = [round EXCEPT ![p] = round[p]+1]
@@ -339,17 +366,17 @@ ReceiveVertexTn(p, q, r, v) ==
 (* Transition AddVertexTn(p, v) encodes process p adding  vertex v from the*)
 (* buffer to the DAG. Additionally, if v is a leader vertex of some wave   *)
 (* then UpdateWaveTn is performed on LeaderConsensus. For this update, we  *)
-(* compute set of waves whose leader vertex in p, is in causal history     *)
-(* of v (ReachableWaveLeaders).                                            *)
+(* compute set of waves whose leader vertex in p, is in strong causal      *)
+(* history of v (ReachableWaveLeaders).                                    *)
 
 ReachableWaveLeaders(p, v) == 
-   {w \in WaveSet : Path(v, WaveLeader(p, w))}
+   {w \in WaveSet : StrongPath(v, WaveLeader(p, w))}
 
 AddVertexTn(p, v) == 
    /\ v \in buffer[p]
    /\ v.round <= round[p]
    /\ dag[p][v.round][v.source] = NilVertex(v.source, v.round)
-   /\ v.edges \in AddedVertices(p, v.round -1)
+   /\ v.edges \in InAddedVertex(p, v.round -1)
    /\ dag'= [dag EXCEPT ![p][v.round][v.source] = v]
    /\ IF v.round % 4 = 1 /\ v.source = ChooseLeader((v.round \div 4)+1) 
       THEN LeaderConsensus!UpdateWaveTn(p, 
