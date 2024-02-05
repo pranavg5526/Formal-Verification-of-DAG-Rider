@@ -15,7 +15,7 @@ EXTENDS FiniteSets,
 (*--------------------------------CONSTANTS--------------------------------*)
 
 (* NumProcessors is the number of participating processes in the protocol. *)
-(* We assume this is non zero. We number processes 1 to NumProcessors.     *)
+(* We assume this is non zero. We number processes 1 to NumProcessors,     *)
 (* and define ProcessorSet as the set of participating processes.          *) 
 (* We define maximum allowed process failures (NumFaultyProcessors) as the *)
 (* greatest integer less than one third of the total number of processes.  *)
@@ -265,7 +265,7 @@ WaveLeader(p, w) == dag[p][4*w-3][ChooseLeader(w)]
 
 -----------------------------------------------------------------------------
 
-(* Transition ProposeTn(p, b) encodes  process p proposing block b.        *)
+(* Transition ProposeTn(p, b) encodes process p proposing block b.         *)
 
 ProposeTn(p, b) == 
    /\ blocksToPropose' = [blocksToPropose EXCEPT 
@@ -277,7 +277,7 @@ ProposeTn(p, b) ==
 
 (* Transition NextRoundTn(p) encodes process p moving to the next round of *)
 (* DAG construction.  Upon completion of the current round process p moves *)
-(* to the next round by creating (CreateVertex) and broadcasting Broadcast *)
+(* to the next round by creating (CreateVertex) and broadcasting (Broadcast*)
 (* a new vertex. Additionally, when next round leads to a new wave it tries*)
 (* to decide the current wave (ReadyWave), if decide condition is satisfied*)
 (* it takes UpdateDecidedWaveTn in LeaderConsensus.                        *)
