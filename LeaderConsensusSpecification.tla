@@ -1,4 +1,3 @@
-
 (* The Leader Consensus Specification defines a state transition system     *)
 (* for wave leaders only, and its monotonicity and consistency properties.  *)
 
@@ -16,7 +15,7 @@ EXTENDS FiniteSets,
 (*-----------------------------CONSTANTS-----------------------------------*)
 
 (* NumProcessors is the number of participating processes in the protocol. *)
-(* We assume this is non zero. We number processes 1 to NumProcessors.     *)
+(* We assume this is non zero. We number processes 1 to NumProcessors,     *)
 (* and define ProcessorSet as the set of participating processes.          *) 
 
 CONSTANT NumProcessors
@@ -73,7 +72,7 @@ InitDecidedWave ==
 -----------------------------------------------------------------------------
 
 (* For every process p and wave w leaderReachablity stores the information *)
-(* whether leader vertex w in the DAG of p exists, along with the set of   *)
+(* weather leader vertex w in the DAG of p exists, along with the set of   *)
 (* waves whose leader vertices are reachable from leader vertex of w.      *)
 
 VARIABLES leaderReachablity
@@ -89,7 +88,7 @@ InitLeaderReachability ==
 -----------------------------------------------------------------------------
 
 (* For every process p, leaderSeq keeps the sequence of waves in the inc-  *)
-(* reasing order committed by the last and the previous last decided wave. *)
+(* reasing order, committed by the last and the previous last decided wave.*)
 
 VARIABLES leaderSeq
 
@@ -110,7 +109,7 @@ InitLeaderSeq ==
 (* leader vertex of w. The transition is restricted to 5 pre conditions    *)
 (* derived from DAG-construction and consensus protocol, below, we         *)
 (* informally describe underlying property behind each one of these        *)
-(* conditions:                                                             *)
+(* conditions (numbered in the spec):                                      *)
 (*  (1) For any process p and wave w there is a unique leader vertex of w, *)
 (*      which is added at most once to the DAG of p.                       *)
 (*  (2) Vertices are added only after their causal histories are added.    *)
@@ -136,13 +135,13 @@ max(E) ==
    ELSE "Error"
 
 UpdateWaveTn(p, w, E) ==   
-   /\ leaderReachablity[p][w].exists = FALSE
-   /\ \A x \in E : leaderReachablity[p][x].exists = TRUE
-   /\ \A x \in E : x < w
-   /\ \A q \in ProcessorSet: 
+   /\ leaderReachablity[p][w].exists = FALSE             \* condition1
+   /\ \A x \in E : leaderReachablity[p][x].exists = TRUE \* condition2
+   /\ \A x \in E : x < w                                 \* condition3
+   /\ \A q \in ProcessorSet:                             \* condition4
       leaderReachablity[q][w].exists = TRUE 
          => leaderReachablity[q][w].edges = E
-   /\ \A q \in ProcessorSet: 
+   /\ \A q \in ProcessorSet:                             \* condition5
       decidedWave[q] # 0 /\ decidedWave[q] < w => decidedWave[q] \in E
    /\ commitWithRef' = [commitWithRef 
          EXCEPT ![p][w] = 
@@ -160,7 +159,7 @@ UpdateWaveTn(p, w, E) ==
 (* transition UpdateDecidedWaveTn(p, w). The transition is restricted to 5 *)
 (* pre-conditions derived from DAG-construction and consensus protocol,    *)
 (* below, we informally describe underlying property behind each one of    *)
-(* these conditions:                                                       *)                            
+(* these conditions (numbered in the spec):                                *)                            
 (*  (1) A wave is decided by a process only if the leader vertex of the    *)
 (*      wave is in the DAG of the process.                                 *)
 (*  (2) The decided wave is always less than or equal to current wave of   *)
@@ -173,7 +172,6 @@ UpdateWaveTn(p, w, E) ==
 (*      subsequent waves of q's DAG. This is derived by quorum             *)
 (*      intersection argument applied on some of the properties of         *)
 (*      DAG-construction and consensus protocol.                           *)
-(*                                                                         *) 
 (* On taking UpdateDecidedWaveTn(p, w), the state variable decidedRefWave  *)
 (* is updated with its value for process p. Additionally, we update leader-*)
 (* Seq variable by referring to the value of commitWithRef variable for    *)
@@ -182,11 +180,11 @@ UpdateWaveTn(p, w, E) ==
 
 
 UpdateDecidedWaveTn(p, w) ==
-   /\ leaderReachablity[p][w].exists = TRUE
-   /\ w >= decidedWave[p]
-   /\ \A x \in WaveSet: 
+   /\ leaderReachablity[p][w].exists = TRUE              \* condition1       
+   /\ w >= decidedWave[p]                                \* condition2
+   /\ \A x \in WaveSet:                                  \* condition3
          x > w => leaderReachablity[p][x].exists = FALSE 
-   /\ \A q \in ProcessorSet, x \in WaveSet:  
+   /\ \A q \in ProcessorSet, x \in WaveSet:              \* condition4
          x > w  /\ leaderReachablity[q][x].exists = TRUE => 
             w \in leaderReachablity[q][x].edges
    /\ decidedWave' = [decidedWave EXCEPT ![p] = w]
