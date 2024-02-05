@@ -1,4 +1,4 @@
--------------------- MODULE LeaderConsensusVerification --------------------
+--------------------- MODULE LeaderConsensusVerification --------------------
 
 EXTENDS FiniteSets, 
         Integers, 
@@ -8,7 +8,7 @@ EXTENDS FiniteSets,
         TLAPS, 
         TLC 
 
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 Contains(w, S) == \E i \in 1..Len(S): S[i] = w
 
@@ -65,13 +65,13 @@ IndInv10 ==
       /\ decidedWave[q] # 0 => 
          IsPrefix(commitWithRef[q][decidedWave[q]], commitWithRef[p][w]) 
 
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 LEMMA MaxInPlt == \A E \in SUBSET(WaveSet) : E # {} =>  max(E) \in E 
       
 LEMMA MaxPropertyPlt == \A E \in SUBSET(WaveSet) : \A x \in E: E # {} => x<=max(E)
 
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 LEMMA SelfIsPrefixLem == \A S \in Seq(WaveSet) : IsPrefix(S, S) = TRUE
       <1>1 \A S \in Seq(WaveSet) : S \o <<>> = S /\ <<>> \in Seq(WaveSet)
@@ -97,7 +97,7 @@ LEMMA AppendIsPrefixLem == \A S \in Seq(WaveSet), w \in WaveSet : IsPrefix(S, Ap
            OBVIOUS
       <1> QED BY <1>1, IsPrefixConcat
      
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 LEMMA TypeLem == Spec => []StateType
  <1>1 Init => StateType
@@ -133,8 +133,7 @@ LEMMA TypeLem == Spec => []StateType
       BY DEF vars, StateType, CommitWithRefType, DecidedWaveType, LeaderReachabilityType, LeaderSeqType
  <1> QED BY <1>1, <1>2, <1>3, PTL DEF Spec
  
-
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 LEMMA IndInv1Lem == Spec => []IndInv1
  <1>1 Init => IndInv1
@@ -702,8 +701,7 @@ LEMMA IndInv10Lem == Spec => []IndInv10
       <2> QED BY <2>1     
  <1> QED BY <1>1, <1>2, PTL, TypeLem, IndInv1Lem, IndInv4Lem, IndInv7Lem, IndInv5Lem, IndInv9Lem DEF Spec             
 
-
----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 THEOREM ConsistencyThm == Spec => []Consistency
   <1>1 Init => Consistency
@@ -778,6 +776,5 @@ THEOREM  MonotonicityThm == Spec => []Monotonicity
            BY <2>2 DEF vars, Monotonicity
       <2> QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, TypeLem, IndInv10Lem, IndInv1Lem, IndInv2Lem, PTL DEF Spec
-
 
 =============================================================================
