@@ -56,7 +56,7 @@ LEMMA CreateVertexTypePlt == ASSUME NEW p \in ProcessorSet, NEW r \in RoundSet
                   PROVE CreateVertex(p, r) \in VertexSet
 
 LEMMA VertexTypePlt == ASSUME NEW v \in VertexSet
-                    PROVE v \in [round : RoundSet, source : ProcessorSet, edges : SUBSET(VertexSet)]
+                    PROVE v \in [round : RoundSet, source : ProcessorSet, strongedges : SUBSET(VertexSet), weakedges : SUBSET(VertexSet)]
 
 LEMMA DivProperty1Plt == ASSUME NEW n \in Nat, NEW x \in 0..4*n, x % 4 = 1
                  PROVE (x \div 4)+1 \in 1..n
@@ -383,15 +383,15 @@ LEMMA IndInv6Lem == Spec => []IndInv6
       <2>1 ASSUME NEW q \in ProcessorSet, NEW t \in ProcessorSet, NEW r \in RoundSet, Init, StateType
            PROVE dag[q][r][t].source = t /\ dag[q][r][t].round = r
            <3>1 CASE r = 0
-                <4>1 dag[q][r][t] = [round |-> r, source |-> t, block |-> "Empty", edges |-> {}]
+                <4>1 dag[q][r][t] = [round |-> r, source |-> t, block |-> "Empty", strongedges |-> {}, weakedges |-> {}]
                       BY <3>1, <2>1 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, ZeroRoundVertex
-                <4>2 [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Empty", edges |-> {}].round = r
+                <4>2 [round |-> r, source |-> t, block |-> "Empty", strongedges |-> {}, weakedges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Empty", strongedges |-> {}, weakedges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
            <3>2 CASE r # 0
-                <4>1  dag[q][r][t] = [round |-> r, source |-> t, block |-> "Nil", edges |-> {}]
+                <4>1  dag[q][r][t] = [round |-> r, source |-> t, block |-> "Nil", strongedges |-> {}, weakedges |-> {}]
                       BY <3>2, <2>1 DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType, NilVertex
-                <4>2 [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Nil", edges |-> {}].round = r
+                <4>2 [round |-> r, source |-> t, block |-> "Nil", strongedges |-> {}, weakedges |-> {}].source = t /\ [round |-> r, source |-> t, block |-> "Nil", strongedges |-> {}, weakedges |-> {}].round = r
                      OBVIOUS
                 <4> QED BY <4>1, <4>2
            <3> QED BY <3>1, <3>2
@@ -419,7 +419,7 @@ LEMMA IndInv6Lem == Spec => []IndInv6
                      <5>1 dag'[q][r][t] = dag[q][r][t]
                           BY <4>2, <3>1, <2>4, <1>2 DEF AddVertexTn, StateType, BlocksToProposeType, BroadcastNetworkType, BroadcastRecordType, BufferType, DagType, RoundType
                      <5> QED BY <5>1, <3>1, <1>2 DEF IndInv6
-                <4> QED BY <4>1, <4>2, VertexTypePlt
+                <4> QED BY <4>1, <4>2
            <3> QED BY <3>1, VertexSetDefPlt, <2>4, <1>2 DEF IndInv6, AddVertexTn, VertexSet
       <2>5 CASE UNCHANGED vars
            BY VertexSetDefPlt, <2>5, <1>2 DEF IndInv6, vars, VertexSet
@@ -497,7 +497,7 @@ LEMMA SpecLem == Spec => LeaderConsensus!Spec
                 <4> QED BY <2>4, <3>1, <4>1, <4>2, UnchangedDefLem DEF AddVertexTn, LeaderConsensus!Next
            <3>2 CASE v.round % 4 # 1 \/ v.source # ChooseLeader((v.round \div 4)+1)
                 BY <3>2, <2>4 DEF AddVertexTn
-           <3> QED BY <3>1, <3>2, VertexTypePlt
+           <3> QED BY <3>1, <3>2
       <2>5 CASE UNCHANGED vars
            BY <2>5 DEF vars, LeaderConsensus!vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
