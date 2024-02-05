@@ -7,7 +7,7 @@ EXTENDS DAGRiderSpecification,
         TLAPS,
         TLC
 
-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 (* Inductive Invariants *)
 
@@ -145,7 +145,6 @@ LEMMA TypeLem == Spec => []StateType
       <2> QED  BY <2>2, <2>3, <2>4, <2>5, <2>6, <1>2 DEF Next
  <1> QED BY <1>1, <1>2, PTL DEF Spec
 
-
 LEMMA IndInv1Lem == Spec => []IndInv1
  <1>1 Init => IndInv1
       <2>1 ASSUME NEW p \in ProcessorSet, NEW q \in ProcessorSet, NEW r \in RoundSet, r # 0, Init
@@ -192,7 +191,6 @@ LEMMA IndInv1Lem == Spec => []IndInv1
            BY VertexSetDefPlt, <2>5, <1>2 DEF IndInv1, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
-
 
 LEMMA IndInv2Lem == Spec => []IndInv2
  <1>1 Init => IndInv2
@@ -255,7 +253,6 @@ LEMMA IndInv2Lem == Spec => []IndInv2
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
-
 LEMMA IndInv3Lem == Spec => []IndInv3
  <1>1 Init => IndInv3
       BY DEF Init, InitBlocksToPropose, InitBroadcastNetwork, InitBroadcastRecord, InitBuffer, InitDag, InitRound, IndInv3
@@ -283,7 +280,6 @@ LEMMA IndInv3Lem == Spec => []IndInv3
            BY VertexSetDefPlt, <2>5, <1>2 DEF IndInv3, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
-
 
 LEMMA IndInv4Lem == Spec => []IndInv4
  <1>1 Init => IndInv4
@@ -329,7 +325,6 @@ LEMMA IndInv4Lem == Spec => []IndInv4
            BY VertexSetDefPlt, <2>5, <1>2 DEF IndInv4, vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, IndInv3Lem, PTL DEF Spec
-
 
 LEMMA IndInv5Lem == Spec => []IndInv5
  <1>1 Init => IndInv5
@@ -383,7 +378,6 @@ LEMMA IndInv5Lem == Spec => []IndInv5
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, IndInv2Lem, PTL DEF Spec
 
-
 LEMMA IndInv6Lem == Spec => []IndInv6
  <1>1 StateType /\ Init => IndInv6
       <2>1 ASSUME NEW q \in ProcessorSet, NEW t \in ProcessorSet, NEW r \in RoundSet, Init, StateType
@@ -432,7 +426,6 @@ LEMMA IndInv6Lem == Spec => []IndInv6
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, TypeLem, PTL DEF Spec
 
-
 -----------------------------------------------------------------------------
 
 THEOREM DagConsistencyThm == Spec => []DagConsistency
@@ -464,12 +457,10 @@ THEOREM DagConsistencyThm == Spec => []DagConsistency
     <2>3 QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, PTL, IndInv1Lem, IndInv4Lem, IndInv5Lem, IndInv6Lem DEF Spec
 
-
 -----------------------------------------------------------------------------
 
 LEMMA UnchangedDefLem == WaveSet = LeaderConsensus!WaveSet /\ ProcessorSet = LeaderConsensus!ProcessorSet /\ NumWaveAsm = LeaderConsensus!NumWaveAsm /\ NumProcessorAsm = LeaderConsensus!NumProcessorAsm
                       BY DEF  WaveSet, LeaderConsensus!WaveSet, ProcessorSet, LeaderConsensus!ProcessorSet, NumWaveAsm, LeaderConsensus!NumWaveAsm, NumProcessorAsm, LeaderConsensus!NumProcessorAsm
-
 
 -----------------------------------------------------------------------------
 
@@ -511,7 +502,6 @@ LEMMA SpecLem == Spec => LeaderConsensus!Spec
            BY <2>5 DEF vars, LeaderConsensus!vars
       <2> QED BY <1>2, <2>1, <2>2, <2>3, <2>4, <2>5 DEF Next
  <1> QED BY <1>1, <1>2, PTL, TypeLem DEF Spec, LeaderConsensus!Spec
-
 
 -----------------------------------------------------------------------------
 
