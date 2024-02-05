@@ -17,15 +17,14 @@ Given our faithful specification of DAG-Rider in TLA+, we prove its expected saf
 
 Naming convention:
 
-<Name>Asm => Assumption
-
-<Name>Plt => Postulate
-
-<Name>Lem => Lemma
-
-<Name>Thm => Theorem
-
-<Name>Type => Type definition of a state variable
-
-Init<Name> => Initialisation of a state variable
-
+| Convention | Description |
+| :---       | :--- |
+| Init`<Name>`| Initialisation of a state variable |
+| `<Name>`Asm | Assumption |
+| `<Name>`Inv | Invariant |
+| `<Name>`Plt  | Postulate |
+| `<Name>`Lem | Lemma |
+| `<Name>`Set | Set |
+| `<Name>`Thm | Theorem |
+| `<Name>`Type | Type definition of a state variable |
+| Num`<Name>` | Cardinality |
