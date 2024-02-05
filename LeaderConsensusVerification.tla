@@ -777,4 +777,7 @@ THEOREM  MonotonicityThm == Spec => []Monotonicity
       <2> QED BY <2>1, <2>2
  <1> QED BY <1>1, <1>2, TypeLem, IndInv10Lem, IndInv1Lem, IndInv2Lem, PTL DEF Spec
 
+THEOREM SafetyThm == Safety
+  BY MonotonicityThm, ConsistencyThm DEF Safety
+
 =============================================================================
