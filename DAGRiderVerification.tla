@@ -516,4 +516,6 @@ THEOREM LeaderConsensusConsistencyThm == Spec=> []LeaderConsistency
 THEOREM LeaderConsensusMonotonicityThm == Spec => []LeaderMonotonicity
   BY LeaderConsensus!MonotonicityThm, SpecLem, NumWaveAsm, NumProcessorAsm, UnchangedDefLem DEF LeaderConsensus!Monotonicity, LeaderMonotonicity
 
+THEOREM SafetyThm == Safety
+  BY LeaderConsensusConsistencyThm, LeaderConsensusMonotonicityThm, DagConsistencyThm DEF Safety
 =============================================================================
