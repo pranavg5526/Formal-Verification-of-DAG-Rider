@@ -67,9 +67,9 @@ CONSTANT ChooseLeader(_)
 
 -----------------------------------------------------------------------------
 
-(* Since we have bounded the number waves, there is a finite set off vert- *)
-(* ices (VertexSet), which can be created by the participating processes.  *)
-(* To define VertexSet, we first define ZeroRoundVertexSet (i.e.,a set of  *)
+(* Since we have bounded the number waves, there is a finite set of verti- *)
+(* ces (VertexSet), which can be created by the participating processes.   *)
+(* To define VertexSet, we first define ZeroRoundVertexSet (i.e., a set of *)
 (* dummy vertices in round 0 of the DAG). Then, we define set              *)
 (* UntilRoundVertex(r), which is set of vertices till round r. It is       *)
 (* important to note that a vertex as defined in DAG-rider is not a vertex *)
@@ -101,9 +101,9 @@ VertexSet == UntilRoundVertex(4*NumWaves)
 
 -----------------------------------------------------------------------------
 
-(* When a vertex is broadcast the broadcast tags the vertex with its sender*)
-(* and the round in which it was sent. TaggedVertexSet is set of all such  *)
-(* tagged vertices.                                                        *)
+(* When a vertex is broadcasted, the broadcast tags the vertex with its    *)
+(* sender and the round in which it was sent. TaggedVertexSet is the set   *)
+(* of all such tagged vertices.                                            *)
 
 TaggedVertexSet == 
    [sender : ProcessorSet, inRound : RoundSet, vertex : VertexSet]
@@ -113,7 +113,7 @@ TaggedVertexSet ==
 (* NilVertex(p, r) is a vertex which represents the non-existence of a mes-*)
 (* sage and whose block is Nil. To make the DAG more expressive we assume  *)
 (* that DAG of every process has a vertex in every round created by every  *)
-(*  process. In practice, a process q might not have added a vertex created*)
+(* process. In practice, a process q might not have added a vertex created *)
 (* by process p in round r in this case we assume that it has a Nil-       *)
 (* Vertex(p, r).  We define NilVertexSet as the set of all nil vertices.   *)
 
@@ -132,7 +132,7 @@ NilVertexSet ==
 (*--------------------------STATE-VARIABLES--------------------------------*)
 
 (* For every process p, blocksToPropose stores a sequence of blocks that   *)
-(* are proposed but not yet initialized to order (blocks whose vertex is  *)
+(* are proposed but not yet initialized to order (blocks whose vertex is   *)
 (* not yet created by the process).                                        *)
 
 VARIABLE blocksToPropose
@@ -145,7 +145,7 @@ InitBlocksToPropose ==
 
 -----------------------------------------------------------------------------
 
-(* For every process p, broadcastNetwork stores set of  TaggedVertices that*)
+(* For every process p, broadcastNetwork stores set of TaggedVertices that *)
 (* are broadcasted but not yet received by p. Additionally it also stores  *)
 (* history of all the TaggedVertices ever broadcasted on the network.      *)
 
@@ -160,7 +160,7 @@ InitBroadcastNetwork ==
 
 -----------------------------------------------------------------------------
 
-(* For every process p and round r, broadcastRecord stores weather or not  *)
+(* For every process p and round r, broadcastRecord stores whether or not  *)
 (* process p broadcasted a vertex in round r.                              *)
 
 VARIABLE broadcastRecord
@@ -428,7 +428,7 @@ Spec == Init /\ [][Next]_vars
 -----------------------------------------------------------------------------
 (*--------------------------SAFETY-INVARIANTS------------------------------*)
 
-(* DagConsistency state that if vertex created by a process o in a round r *)
+(* DagConsistency states that if vertex created by a process o in a round r*)
 (* is added to the DAG of process p and q then they are the same vertices. *)
 (* Note that a vertex stores its entire causal history, thus their causal  *)
 (* histories are same.                                                     *)
@@ -441,7 +441,7 @@ DagConsistency ==
 
 -----------------------------------------------------------------------------
 
-(* LeaderConsistency and LeaderMonotonicity is same as defined in Leader-  *)
+(* LeaderConsistency and LeaderMonotonicity are same as defined in Leader- *)
 (* ConsensusSpecification.                                                 *)
 
 LeaderConsistency == 
