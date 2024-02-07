@@ -17,6 +17,12 @@ For DAG-Rider, to prove the consistency of communication during the DAG construc
 
 ![image](https://github.com/pranavg5526/Formal-Verification-of-DAG-Rider/assets/140618144/e2f0ee5a-629d-4cd9-b9d5-90cabfaaf13a)
 
+Reading suggestion: 
+
+The specification and verification files should be read in the following order, someone who is just interested in specification can skip reading verification files:
+
+LeaderConsensusSpecification -> LeaderConsensusVerification -> DAGRiderSpecification -> DAGRiderVerification
+
 Naming convention:
 
 | Convention | Description |
