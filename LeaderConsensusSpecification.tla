@@ -30,7 +30,7 @@ ProcessorSet ==
 
 (* NumWaves is the number of waves after which the protocol will stop, we  *)
 (* assume this is non zero. We number waves 1 to NumWaves and define Wave- *)
-(* Set as the set of participating processes.                              *)
+(* Set as the set of waves.    	      	                                   *)
 
 CONSTANT NumWaves
 
@@ -72,7 +72,7 @@ InitDecidedWave ==
 -----------------------------------------------------------------------------
 
 (* For every process p and wave w leaderReachablity stores the information *)
-(* weather leader vertex w in the DAG of p exists, along with the set of   *)
+(* whether leader vertex w in the DAG of p exists, along with the set of   *)
 (* waves whose leader vertices are reachable from leader vertex of w.      *)
 
 VARIABLES leaderReachablity
@@ -226,7 +226,7 @@ Spec == Init /\ [][Next]_vars
 
 (* Monotonicity states that the commitment of waves happen monotonically   *)
 (* with respect to the decided waves, that is the order in which waves are *)
-(* committed so far wont be altered in future with a new decided wave.     *)
+(* committed so far won't be altered in future with a new decided wave.    *)
 
 Monotonicity == 
    \A p \in ProcessorSet: 
@@ -244,6 +244,9 @@ Consistency ==
          IsPrefix(leaderSeq[p].current, leaderSeq[q].current)
 
 -----------------------------------------------------------------------------
+
+(* The overall Safety property states that the specification entails	   *)
+(* both the Monotonicity and Consistency properties     		   *)
 
 Safety == Spec => [](Monotonicity /\ Consistency)
 
